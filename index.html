@@ -133,9 +133,9 @@
     <div id="menu-screen">
         <h2 style="color: #ffffff; margin-top: 0; letter-spacing: 2px;">GHOST REPOSITORY</h2>
         <p style="margin-bottom: 20px; color: #888;">Select an anomaly container execution rate:</p>
-        <button id="speed-relaxed" class="toggle-btn active" onclick="setSpeed('relaxed')">🧘 Relaxed Chamber</button>
+        <button id="speed-relaxed" class="toggle-btn active" onclick="setSpeed('relaxed')"> Relaxed Chamber</button>
         <button id="speed-timer" class="toggle-btn" onclick="setSpeed('timer')">⏱️ 30-Second Countdown</button>
-        <button id="speed-mirror" class="toggle-btn" onclick="setSpeed('mirror')">🌀 Kinetic Mirror</button>
+        <button id="speed-mirror" class="toggle-btn" onclick="setSpeed('mirror')"> Kinetic Mirror</button>
         <button id="start-btn" onclick="launchGame()">INITIALISE MATRIX</button>
     </div>
 
@@ -261,7 +261,7 @@
             const timeGap = currentTime - lastClickTime;
             lastClickTime = currentTime;
 
-            if (timeGap < 650) {
+            if (timeGap < 1500) {
                 karmaPoints--;
             } else {
                 karmaPoints++;
