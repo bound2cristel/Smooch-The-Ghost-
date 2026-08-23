@@ -304,6 +304,14 @@
         let karmaPoints = 0;
         let lastClickTime = 0;
 
+t        function setModifier(mod) {
+            chosenModifier = mod;
+            document.getElementById('mod-relaxed').classList.remove('active');
+            document.getElementById('mod-timer').classList.remove('active');
+            document.getElementById('mod-mirror').classList.remove('active');
+            document.getElementById('mod-' + mod).classList.add('active');
+        }
+
         function setRoute(route) {
             chosenRoute = route;
             document.getElementById('route-pacifist').classList.remove('active');
@@ -326,14 +334,17 @@
             document.getElementById('ui-box').style.display = 'block';
             isBattleActive = true;
 
+            if (chosenModifier === 'timer') {
+                timeLeft = 30;
+                startGlobalTimer();
+            }
+
             if (chosenRoute === 'genocide') {
                 setupGenocideFight();
             } else {
                 setupPacifistChamber();
             }
-        }
-
-        // ================= PACIFIST ENGINE =================
+        }        // ================= PACIFIST ENGINE =================
         function setupPacifistChamber() {
             document.body.style.backgroundColor = '#12121f';
             arena.style.backgroundColor = '#161623';
