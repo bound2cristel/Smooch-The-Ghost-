@@ -332,4 +332,30 @@ function executePlayerAttack() {
         dialogue.innerText = `* You struck the entity. It scales its defenses. HP left: ${bossHp}`;
     }
 }
+  function attemptMercy() {
+            if (!isBattleActive) return;
+            dialogue.innerText = "* It refuses your gesture. Your past actions have locked the container variables.";
+        }
 
+        function endGameSequence(isVictory) {
+            isBattleActive = false;
+            clearInterval(attackCycle);
+            
+            // Clean up left over elements
+            bullets.forEach(b => b.element.remove());
+            bullets = [];
+
+            if (isVictory) {
+                boss.style.display = 'none';
+                dialogue.style.borderColor = '#ff0000';
+                dialogue.style.color = '#ff0000';
+                dialogue.innerText = "💀 SYSTEM PURGED: The ghost dissolved into static code. You left nothing behind but dust and cold numbers.";
+            } else {
+                soul.innerText = "💔";
+                dialogue.style.borderColor = '#555555';
+                dialogue.innerText = "* Game Over. Your determination faded into the darkness.";
+            }
+        }
+    </script>
+</body>
+</html>
