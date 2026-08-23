@@ -206,180 +206,151 @@
 </head>
 <body>
 
-   <!-- SELECTION MENU -->
+<!-- SELECTION MENU -->
 <div id="menu-screen">
     <h2 id="menu-title" style="color: #ffffff; margin-top: 0; letter-spacing: 2px;">GHOST REPOSITORY</h2>
-    
     <p style="margin: 10px 0 5px 0; color: #888; font-size: 13px;">CORE PROTOCOL:</p>
-    <button id="route-pacifist" class="toggle-btn active" onclick="setRoute('pacifist')">🌸 Pacifist Path</button>
-    <button id="route-genocide" class="toggle-btn" onclick="setRoute('genocide')">💀 Hardcore Genocide</button>
-    
+    <button id="route-pacifist" class="toggle-btn active" onclick="setRoute('pacifist')">[ PACIFIST PATH ]</button>
+    <button id="route-genocide" class="toggle-btn" onclick="setRoute('genocide')">[ HARDCORE GENOCIDE ]</button>
     <p style="margin: 15px 0 5px 0; color: #888; font-size: 13px;">CHAMBER MODIFIER:</p>
-    <button id="mod-relaxed" class="toggle-btn active" onclick="setModifier('relaxed')">🌀 Relaxed Chamber</button>
-    <button id="mod-timer" class="toggle-btn" onclick="setModifier('timer')">⏱️ 30s Countdown</button>
-    <button id="mod-mirror" class="toggle-btn" onclick="setModifier('mirror')">🪞 Kinetic Mirror</button>
-    
+    <button id="mod-relaxed" class="toggle-btn active" onclick="setModifier('relaxed')">[ RELAXED CHAMBER ]</button>
+    <button id="mod-timer" class="toggle-btn" onclick="setModifier('timer')">[ 30s COUNTDOWN ]</button>
+    <button id="mod-mirror" class="toggle-btn" onclick="setModifier('mirror')">[ KINETIC MIRROR ]</button>
     <p style="color: #666666; font-size: 11px; margin-top: 15px; font-style: italic;">credits to fucking max for the fucking idea of the battle i fucking guess</p>
     <button id="start-btn" onclick="launchGame()">INITIALISE MATRIX</button>
 </div>
 
 <!-- STATS AND HEALTH HUD -->
-  <div id="boss-hp-bar"><div id="boss-hp-fill"></div></div>
-    <div id="player-stats"> 
-        <div id="stat-name" style="color: #ffffff;">PLAYER LV 1</div> 
-        <div id="stat-hp-box" style="color: #ff4d6d;">HP: <span id="player-hp">99</span> / 99</div> 
-    </div>
+<div id="boss-hp-bar"><div id="boss-hp-fill"></div></div>
+<div id="player-stats">
+    <div id="stat-name" style="color: #ffffff;">PLAYER LV 1</div>
+    <div id="stat-hp-box" style="color: #ff4d6d;">HP: <span id="player-hp">99</span> / 99</div>
+</div>
 
-    <!-- PASTE THE NEW BLOCK DIRECTLY BELOW THIS LINE -->
-    <!-- MAIN INTERACTIVE BOX -->
-    <div id="battle-arena">
-        <div id="ghost-boss" style="left: 220px; top: 170px;">👻</div>
-        <div id="player-soul" style="display: none;">❤️</div>
-    </div>
+<!-- MAIN INTERACTIVE BOX -->
+<div id="battle-arena">
+    <div id="ghost-boss" style="left: 220px; top: 170px;">GHOST</div>
+    <div id="player-soul" style="display: none;">SOUL</div>
+</div>
 
-    <!-- HUD TEXT BOX -->
-   <div id="ui-box">
+<!-- HUD TEXT BOX -->
+<div id="ui-box">
     <div id="dialogue">Calibrating personality matrices...</div>
     <div id="action-menu" style="display: none;">
-        <button class="menu-btn" onclick="executePlayerAttack()">⚔️ FIGHT</button>
-        <button class="menu-btn" onclick="attemptMercy()">❌ MERCY</button>
+        <button class="menu-btn" onclick="executePlayerAttack()">[ FIGHT ]</button>
+        <button class="menu-btn" onclick="attemptMercy()">[ MERCY ]</button>
     </div>
 </div>
-    <script>
-        const arena = document.getElementById('battle-arena');
-        const soul = document.getElementById('player-soul');
-        const boss = document.getElementById('ghost-boss');
-        const dialogue = document.getElementById('dialogue');
-        const bossHpFill = document.getElementById('boss-hp-fill');
-        const playerHpDisplay = document.getElementById('player-hp');
-        const menuScreen = document.getElementById('menu-screen');
-        const menuTitle = document.getElementById('menu-title');
-        const menuText = document.getElementById('menu-text');
-        const startBtn = document.getElementById('start-btn');
-        const actionMenu = document.getElementById('action-menu');
+   <script>
+    const arena = document.getElementById('battle-arena');
+    const soul = document.getElementById('player-soul');
+    const boss = document.getElementById('ghost-boss');
+    const dialogue = document.getElementById('dialogue');
+    const bossHpFill = document.getElementById('boss-hp-fill');
+    const playerHpDisplay = document.getElementById('player-hp');
+    const menuScreen = document.getElementById('menu-screen');
+    const menuTitle = document.getElementById('menu-title');
+    const menuText = document.getElementById('menu-text');
+    const startBtn = document.getElementById('start-btn');
+    const actionMenu = document.getElementById('action-menu');
 
-        let chosenRoute = 'pacifist';
-        let chosenModifier = 'relaxed'; 
-        let timeLeft = 30;              
-        let countdownInterval;          
-        let bossHp = 600;
-        let playerHp = 99;
-        let isBattleActive = false;
-        let attackCycle;
-        let bullets = [];
-        let soulX = 240;
-        let soulY = 320;
+    let chosenRoute = 'pacifist';
+    let chosenModifier = 'relaxed';
+    let timeLeft = 30;
+    let countdownInterval;
+    let bossHp = 600;
+    let playerHp = 99;
+    let isBattleActive = false;
+    let attackCycle;
+    let bullets = [];
+    let soulX = 240;
+    let soulY = 320;
+    let isPlayerTurn = true;
+    let turnTimer;
 
-        let isPlayerTurn = true; 
-        let turnTimer;
+    // Pacifist variables
+    let pacifistClicks = 0;
+    let karmaPoints = 0;
+    let lastClickTime = 0;
 
-        let pacifistClicks = 0;
-        let karmaPoints = 0;
-        let lastClickTime = 0;
+    function setModifier(mod) {
+        chosenModifier = mod;
+        document.getElementById('mod-relaxed').classList.remove('active');
+        document.getElementById('mod-timer').classList.remove('active');
+        document.getElementById('mod-mirror').classList.remove('active');
+        document.getElementById('mod-' + mod).classList.add('active');
+    }
 
-    <script>
-        const arena = document.getElementById('battle-arena');
-        const soul = document.getElementById('player-soul');
-        const boss = document.getElementById('ghost-boss');
-        const dialogue = document.getElementById('dialogue');
-        const bossHpFill = document.getElementById('boss-hp-fill');
-        const playerHpDisplay = document.getElementById('player-hp');
-        const menuScreen = document.getElementById('menu-screen');
-        const menuTitle = document.getElementById('menu-title');
-        const menuText = document.getElementById('menu-text');
-        const startBtn = document.getElementById('start-btn');
-        const actionMenu = document.getElementById('action-menu');
+    function setRoute(route) {
+        chosenRoute = route;
+        document.getElementById('route-pacifist').classList.remove('active');
+        document.getElementById('route-genocide').classList.remove('active');
+        document.getElementById('route-' + route).classList.add('active');
 
-        let chosenRoute = 'pacifist';
-        let bossHp = 600;
-        let playerHp = 99;
-        let isBattleActive = false;
-        let attackCycle;
-        let bullets = [];
-        let soulX = 240;
-        let soulY = 320;
+        if (route === 'genocide') {
+            menuScreen.style.borderColor = '#ff0000';
+            menuTitle.style.color = '#ff0000';
+        } else {
+            menuScreen.style.borderColor = '#ffffff';
+            menuTitle.style.color = '#ffffff';
+        }
+    }
 
-        // Pacifist variables
-        let pacifistClicks = 0;
-        let karmaPoints = 0;
-        let lastClickTime = 0;
+    function launchGame() {
+        menuScreen.style.display = 'none';
+        arena.style.display = 'block';
+        document.getElementById('player-stats').style.display = 'flex';
+        document.getElementById('ui-box').style.display = 'block';
+        isBattleActive = true;
 
-t        function setModifier(mod) {
-            chosenModifier = mod;
-            document.getElementById('mod-relaxed').classList.remove('active');
-            document.getElementById('mod-timer').classList.remove('active');
-            document.getElementById('mod-mirror').classList.remove('active');
-            document.getElementById('mod-' + mod).classList.add('active');
+        if (chosenModifier === 'timer') {
+            timeLeft = 30;
+            startGlobalTimer();
         }
 
-        function setRoute(route) {
-            chosenRoute = route;
-            document.getElementById('route-pacifist').classList.remove('active');
-            document.getElementById('route-genocide').classList.remove('active');
-            document.getElementById('route-' + route).classList.add('active');
-
-            if (route === 'genocide') {
-                menuScreen.style.borderColor = '#ff0000';
-                menuTitle.style.color = '#ff0000';
-            } else {
-                menuScreen.style.borderColor = '#ffffff';
-                menuTitle.style.color = '#ffffff';
-            }
+        if (chosenRoute === 'genocide') {
+            setupGenocideFight();
+        } else {
+            setupPacifistChamber();
         }
+    }
 
-        function launchGame() {
-            menuScreen.style.display = 'none';
-            arena.style.display = 'block';
-            document.getElementById('player-stats').style.display = 'flex';
-            document.getElementById('ui-box').style.display = 'block';
-            isBattleActive = true;
+    // ================= PACIFIST ENGINE =================
+    function setupPacifistChamber() {
+        document.body.style.backgroundColor = '#12121f';
+        arena.style.backgroundColor = '#161623';
+        arena.style.borderColor = '#ffffff';
+        document.getElementById('stat-name').innerText = "PLAYER LV 1";
+        document.getElementById('stat-hp-box').innerHTML = "Clicks: <span id='player-hp'>0</span>";
+        boss.style.left = '225px';
+        boss.style.top = '170px';
+        soul.style.display = 'none';
+        actionMenu.style.display = 'none';
+        pacifistClicks = 0;
+        karmaPoints = 0;
+        lastClickTime = Date.now();
+        dialogue.innerText = "A quiet ghost appears. What are your intentions?";
+        moveGhostRandomly();
+    }
 
-            if (chosenModifier === 'timer') {
-                timeLeft = 30;
-                startGlobalTimer();
-            }
+    function moveGhostRandomly() {
+        if (!isBattleActive || chosenRoute !== 'pacifist') return;
+        const maxX = arena.clientWidth - boss.clientWidth;
+        const maxY = arena.clientHeight - boss.clientHeight;
+        boss.style.left = Math.floor(Math.random() * maxX) + 'px';
+        boss.style.top = Math.floor(Math.random() * maxY) + 'px';
+    }
 
-            if (chosenRoute === 'genocide') {
-                setupGenocideFight();
-            } else {
-                setupPacifistChamber();
-            }
-        }        // ================= PACIFIST ENGINE =================
-        function setupPacifistChamber() {
-            document.body.style.backgroundColor = '#12121f';
-            arena.style.backgroundColor = '#161623';
-            arena.style.borderColor = '#ffffff';
-            document.getElementById('stat-name').innerText = "PLAYER LV 1";
-            document.getElementById('stat-hp-box').innerHTML = "Clicks: <span id='player-hp'>0</span>";
-            
-            boss.style.left = '225px';
-            boss.style.top = '170px';
-            soul.style.display = 'none';
-            actionMenu.style.display = 'none';
-            
-            pacifistClicks = 0;
-            karmaPoints = 0;
-            lastClickTime = Date.now();
-            dialogue.innerText = "A quiet ghost appears. What are your intentions?";
-            moveGhostRandomly();
-        }
-        function moveGhostRandomly() {
-            if (!isBattleActive || chosenRoute !== 'pacifist') return;
-            const maxX = arena.clientWidth - boss.clientWidth;
-            const maxY = arena.clientHeight - boss.clientHeight;
-            boss.style.left = Math.floor(Math.random() * maxX) + 'px';
-            boss.style.top = Math.floor(Math.random() * maxY) + 'px';
-        }
+    function spawnParticle(x, y, symbol) {
+        const part = document.createElement('div');
+        part.classList.add('heart-pop');
+        part.innerText = symbol;
+        part.style.left = x + 'px';
+        part.style.top = y + 'px';
+        arena.appendChild(part);
+        setTimeout(() => { part.remove(); }, 600);
+    }
 
-        function spawnParticle(x, y, symbol) {
-            const part = document.createElement('div');
-            part.classList.add('heart-pop');
-            part.innerText = symbol;
-            part.style.left = x + 'px';
-            part.style.top = y + 'px';
-            arena.appendChild(part);
-            setTimeout(() => { part.remove(); }, 600);
-        }
 
         // ================= GENOCIDE ENGINE =================
         function setupGenocideFight() {
@@ -538,51 +509,81 @@ t        function setModifier(mod) {
                 moveGhostRandomly();
             }
         });
+// ================= OVERALL CORE ENDGAME =================
+function endGameSequence(isVictory) {
+    isBattleActive = false;
+    clearInterval(attackCycle);
+    if (typeof countdownInterval !== 'undefined') clearInterval(countdownInterval);
+    bullets.forEach(b => b.element.remove());
+    bullets = [];
 
-        // ================= OVERALL CORE ENDGAME =================
-        function endGameSequence(isVictory) {
-            isBattleActive = false;
-            clearInterval(attackCycle);
-            bullets.forEach(b => b.element.remove());
-            bullets = [];
+    setTimeout(() => {
+        arena.style.display = 'none';
+        document.getElementById('boss-hp-bar').style.display = 'none';
+        document.getElementById('player-stats').style.display = 'none';
+        document.getElementById('ui-box').style.display = 'none';
+        menuScreen.style.display = 'block';
 
-            setTimeout(() => {
-                arena.style.display = 'none';
-                document.getElementById('boss-hp-bar').style.display = 'none';
-                document.getElementById('player-stats').style.display = 'none';
-                document.getElementById('ui-box').style.display = 'none';
-                menuScreen.style.display = 'block';
-
-                if (chosenRoute === 'genocide') {
-                    if (isVictory) {
-                        menuTitle.innerText = "SYSTEM PURGED";
-                        menuTitle.style.color = '#00ffcc';
-                        menuScreen.style.borderColor = '#00ffcc';
-                        menuScreen.style.boxShadow = '0 0 20px #00ffcc';
-                        menuText.innerText = "The ghost dissolved into static code. You left nothing behind but dust and cold numbers.";
-                    } else {
-                        menuTitle.innerText = "GAME OVER";
-                        menuTitle.style.color = '#ff0000';
-                        menuScreen.style.borderColor = '#ff0000';
-                        menuScreen.style.boxShadow = '0 0 20px #ff0000';
-                        menuText.innerText = "Your determination shattered under the pressure of the localized timeline loop.";
-                    }
-                } else {
-                    if (karmaPoints >= 0) {
-                        document.body.style.backgroundColor = '#1a3a2a';
-                        menuTitle.innerText = "TRUE PACIFIST";
-                        menuTitle.style.color = '#00ffcc';
-                        menuScreen.style.borderColor = '#00ffcc';
-                        menuText.innerText = "🌸 You treated the entity with absolute patience and respect. You are bonded forever.";
-                    } else {
-                        document.body.style.backgroundColor = '#3a0a0a';
-                        menuTitle.innerText = "NEUTRAL CORRUPTION";
-                        menuTitle.style.color = '#ff0000';
-                        menuScreen.style.borderColor = '#ff0000';
-                        menuText.innerText = "💀 Your aggressive speed and clicking tore the soul apart.";
-                    }
-                }
-                startBtn.innerText = "RE-INITIALISE ENGINE";
-            }, 1000);
+        if (chosenRoute === 'genocide') {
+            if (isVictory) {
+                menuTitle.innerText = "SYSTEM PURGED";
+                menuTitle.style.color = '#00ffcc';
+                menuScreen.style.borderColor = '#00ffcc';
+                menuScreen.style.boxShadow = '0 0 20px #00ffcc';
+                menuText.innerText = "The ghost dissolved into static code. You left nothing behind but dust and cold numbers.";
+            } else {
+                menuTitle.innerText = "GAME OVER";
+                menuTitle.style.color = '#ff0000';
+                menuScreen.style.borderColor = '#ff0000';
+                menuScreen.style.boxShadow = '0 0 20px #ff0000';
+                menuText.innerText = "Your determination shattered under the pressure of the localized timeline loop.";
+            }
+        } else {
+            if (karmaPoints >= 0) {
+                document.body.style.backgroundColor = '#1a3a2a';
+                menuTitle.innerText = "TRUE PACIFIST";
+                menuTitle.style.color = '#00ffcc';
+                menuScreen.style.borderColor = '#00ffcc';
+                menuText.innerText = "🌸 You treated the entity with absolute patience and respect. You are bonded forever.";
+            } else {
+                document.body.style.backgroundColor = '#3a0a0a';
+                menuTitle.innerText = "NEUTRAL CORRUPTION";
+                menuTitle.style.color = '#ff0000';
+                menuScreen.style.borderColor = '#ff0000';
+                menuText.innerText = "💀 Your aggressive speed and clicking tore the soul apart.";
+            }
         }
-    </script>        
+        startBtn.innerText = "RE-INITIALISE ENGINE";
+    }, 1000);
+}
+
+// ⏱️ MISSING TIMEOUT GAUNTLET CONTROLLER
+function startGlobalTimer() {
+    clearInterval(countdownInterval);
+    countdownInterval = setInterval(() => {
+        if (!isBattleActive) {
+            clearInterval(countdownInterval);
+            return;
+        }
+        timeLeft--;
+        dialogue.innerText = `* Time Remaining: ${timeLeft}s`;
+        
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            endGameSequence(chosenRoute === 'pacifist' || bossHp < 300);
+        }
+    }, 1000);
+}
+
+// 🪞 MISSING MIRROR CAMERA TILT MATH
+function applyMirrorDistortion() {
+    if (typeof chosenModifier === 'undefined' || chosenModifier !== 'mirror' || !isBattleActive) return;
+    let currentRotation = (Math.random() * 20 - 10); 
+    arena.style.transform = `rotate(${currentRotation}deg) scale(${1 + (Math.random() * 0.05)})`;
+    setTimeout(() => {
+        arena.style.transform = 'rotate(0deg) scale(1)';
+    }, 150);
+}
+</script>
+</body>
+</html>
