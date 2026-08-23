@@ -534,7 +534,266 @@
                 startBtn.innerText = "RE-INITIALISE ENGINE";
             }, 1000);
         }
-    </script>
+    </script>         const arena = document.getElementById('battle-arena');
+        const soul = document.getElementById('player-soul');
+        const boss = document.getElementById('ghost-boss');
+        const dialogue = document.getElementById('dialogue');
+        const bossHpFill = document.getElementById('boss-hp-fill');
+        const playerHpDisplay = document.getElementById('player-hp');
+        const menuScreen = document.getElementById('menu-screen');
+        const menuTitle = document.getElementById('menu-title');
+        const menuText = document.getElementById('menu-text');
+        const startBtn = document.getElementById('start-btn');
+        const actionMenu = document.getElementById('action-menu');
+
+        let chosenRoute = 'pacifist';
+        let bossHp = 600;
+        let playerHp = 99;
+        let isBattleActive = false;
+        let attackCycle;
+        let bullets = [];
+        let soulX = 240;
+        let soulY = 320;
+
+        // Turn Management Matrix
+        let isPlayerTurn = true; 
+        let turnTimer;
+
+        // Pacifist variables
+        let pacifistClicks = 0;
+        let karmaPoints = 0;
+        let lastClickTime = 0;
+
+        function setRoute(route) {
+            chosenRoute = route;
+            document.getElementById('route-pacifist').classList.remove('active');
+            document.getElementById('route-genocide').classList.remove('active');
+            document.getElementById('route-' + route).classList.add('active');
+
+            if (route === 'genocide') {
+                menuScreen.style.borderColor = '#ff0000';
+                menuTitle.style.color = '#ff0000';
+            } else {
+                menuScreen.style.borderColor = '#ffffff';
+                menuTitle.style.color = '#ffffff';
+            }
+        }
+
+        function launchGame() {
+            menuScreen.style.display = 'none';
+            arena.style.display = 'block';
+            document.getElementById('player-stats').style.display = 'flex';
+            document.getElementById('ui-box').style.display = 'block';
+            isBattleActive = true;
+
+            if (chosenRoute === 'genocide') {
+                setupGenocideFight();
+            } else {
+                setupPacifistChamber();
+            }
+        }
+
+        // ================= PACIFIST ENGINE =================
+        function setupPacifistChamber() {
+            document.body.style.backgroundColor = '#12121f';
+            arena.style.backgroundColor = '#161623';
+            arena.style.borderColor = '#ffffff';
+            document.getElementById('stat-name').innerText = "PLAYER LV 1";
+            document.getElementById('stat-hp-box').innerHTML = "Clicks: <span id='player-hp'>0</span>";
+            
+            boss.style.left = '225px';
+            boss.style.top = '170px';
+            soul.style.display = 'none';
+            actionMenu.style.display = 'none';
+            
+            pacifistClicks = 0;
+            karmaPoints = 0;
+            lastClickTime = Date.now();
+            dialogue.innerText = "A quiet ghost appears. What are your intentions?";
+            moveGhostRandomly();
+        }
+
+        function moveGhostRandomly() {
+            if (!isBattleActive || chosenRoute !== 'pacifist') return;
+            const maxX = arena.clientWidth - boss.clientWidth;
+            const maxY = arena.clientHeight - boss.clientHeight;
+            boss.style.left = Math.floor(Math.random() * maxX) + 'px';
+            boss.style.top = Math.floor(Math.random() * maxY) + 'px';
+        }
+
+        function spawnParticle(x, y, symbol) {
+            const part = document.createElement('div');
+            part.classList.add('heart-pop');
+            part.innerText = symbol;
+            part.style.left = x + 'px';
+            part.style.top = y + 'px';
+            arena.appendChild(part);
+            setTimeout(() => { part.remove(); }, 600);
+        }
+
+        // ================= GENOCIDE ENGINE =================
+        function setupGenocideFight() {
+            document.body.style.backgroundColor = '#000000';
+            arena.style.backgroundColor = '#000000';
+            arena.style.borderColor = '#ffffff';
+            document.getElementById('boss-hp-bar').style.display = 'block';
+            document.getElementById('stat-name').innerText = "PLAYER LV 19";
+            document.getElementById('stat-hp-box').innerHTML = "HP: <span id='player-hp'>99</span> / 99";
+            
+            bossHp = 600;
+            playerHp = 99;
+            bossHpFill.style.width = '100%';
+            
+            boss.style.left = '220px';
+            boss.style.top = '20px';
+            
+            soul.style.display = 'block';
+            soul.style.left = '240px';
+            soul.style.top = '320px';
+            
+            startPlayerTurn();
+        }
+
+        function startPlayerTurn() {
+            if (!isBattleActive) return;
+            isPlayerTurn = true;
+            
+            // Clear out leftover projectiles entirely
+            clearInterval(attackCycle);
+            clearTimeout(turnTimer);
+            bullets.forEach(b => b.element.remove());
+            bullets = [];
+            
+            // Hide soul and reveal interface menu options safely
+            soul.style.display = 'none';
+            actionMenu.style.display = 'flex';
+            dialogue.innerText = "* Choose your execution parameters.";
+        }
+
+        function startGhostTurn() {
+            isPlayerTurn = false;
+            actionMenu.style.display = 'none';
+            soul.style.display = 'block';
+            dialogue.innerText = "* The anomaly strikes back!";
+            
+            spawnBulletHell();
+
+            // Run enemy phase for exactly 5 seconds before switching back
+            turnTimer = setTimeout(() => {
+                startPlayerTurn();
+            }, 5000);
+        }
+
+        function spawnBulletHell() {
+            attackCycle = setInterval(() => {
+                if (!isBattleActive || isPlayerTurn) return;
+
+                boss.style.transform = `translateX(${Math.floor(Math.random() * 80) - 40}px)`;
+                const b = document.createElement('div');
+                b.classList.add('bullet');
+                
+                let startX = parseInt(boss.style.left || 220) + 25;
+                let startY = 70;
+                b.style.left = startX + 'px';
+                b.style.top = startY + 'px';
+                arena.appendChild(b);
+
+                let diffX = soulX - startX;
+                let diffY = soulY - startY;
+                let distance = Math.sqrt(diffX * diffX + diffY * diffY);
+                
+                // Controlled pacing parameters
+                let speedMagnitude = 4.0; 
+                let velX = (diffX / distance) * speedMagnitude + (Math.random() - 0.5) * 0.5;
+                let velY = (diffY / distance) * speedMagnitude;
+
+                bullets.push({ element: b, x: startX, y: startY, vx: velX, vy: velY });
+            }, 180); // Higher spacing loop rate
+
+            requestAnimationFrame(updateProjectiles);
+        }
+
+        function updateProjectiles() {
+            if (!isBattleActive || isPlayerTurn) return;
+
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                let b = bullets[i];
+                b.x += b.vx;
+                b.y += b.vy;
+                b.element.style.left = b.x + 'px';
+                b.element.style.top = b.y + 'px';
+
+                if (b.y > 400 || b.y < 0 || b.x > 500 || b.x < 0) {
+                    b.element.remove();
+                    bullets.splice(i, 1);
+                    continue;
+                }
+
+                if (Math.abs(b.x - soulX) < 14 && Math.abs(b.y - soulY) < 14) {
+                    triggerPlayerDamage();
+                    b.element.remove();
+                    bullets.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(updateProjectiles);
+        }
+
+        function triggerPlayerDamage() {
+            playerHp -= 12;
+            if (playerHp < 0) playerHp = 0;
+            document.getElementById('player-hp').innerText = playerHp;
+
+            document.body.style.backgroundColor = '#4a0000';
+            setTimeout(() => { document.body.style.backgroundColor = '#000000'; }, 60);
+
+            if (playerHp <= 0) {
+                endGameSequence(false);
+            }
+        }
+
+        function executePlayerAttack() { 
+            if (!isBattleActive || !isPlayerTurn) return; 
+
+            const slice = document.createElement('div'); 
+            slice.classList.add('slice-effect'); 
+            slice.style.left = '250px'; 
+            slice.style.top = '40px';
+            arena.appendChild(slice);
+            setTimeout(() => slice.remove(), 150);
+
+            bossHp -= 60; 
+            if (bossHp < 0) bossHp = 0;
+            bossHpFill.style.width = (bossHp / 600 * 100) + '%';
+
+            if (bossHp <= 0) {
+                endGameSequence(true);
+            } else {
+                // Immediately transition state forward to enemy defense loop phase after hitting
+                startGhostTurn();
+            }
+        }
+
+        function attemptMercy() {
+            if (!isBattleActive || !isPlayerTurn) return;
+            dialogue.innerText = "* Your hands remain covered in static dust. MERCY is locked out.";
+            
+            // Choosing Mercy still ends your turn and forces you to dodge!
+            setTimeout(startGhostTurn, 1500);
+        }
+
+        // ================= INPUT LISTENERS =================
+        arena.addEventListener('mousemove', (e) => {
+            if (!isBattleActive || chosenRoute !== 'genocide' || isPlayerTurn) return;
+            const rect = arena.getBoundingClientRect();
+            soulX = e.clientX - rect.left - 10; 
+            soulY = e.clientY - rect.top - 10;
+
+            if (soulX < 0) soulX = 0;
+            if (soulX > 480) soulX = 480;
+            if (soulY < 0) soulY = 0;
+            if (soulY > 380) soulY = 380;
+
+
 </body>
 </html>
 
