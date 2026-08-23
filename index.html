@@ -226,11 +226,10 @@
     <div id="stat-name" style="color: #ffffff;">PLAYER LV 1</div>
     <div id="stat-hp-box" style="color: #ff4d6d;">HP: <span id="player-hp">99</span> / 99</div>
 </div>
-
 <!-- MAIN INTERACTIVE BOX -->
 <div id="battle-arena">
-    <div id="ghost-boss" style="left: 220px; top: 170px;">GHOST</div>
-    <div id="player-soul" style="display: none;">SOUL</div>
+    <div id="ghost-boss" style="left: 220px; top: 170px;">👻</div>
+    <div id="player-soul" style="display: none;">❤️</div>
 </div>
 
 <!-- HUD TEXT BOX -->
@@ -241,7 +240,8 @@
         <button class="menu-btn" onclick="attemptMercy()">[ MERCY ]</button>
     </div>
 </div>
-   <script>
+
+<script>
     const arena = document.getElementById('battle-arena');
     const soul = document.getElementById('player-soul');
     const boss = document.getElementById('ghost-boss');
@@ -315,42 +315,21 @@
         }
     }
 
-    // ================= PACIFIST ENGINE =================
-    function setupPacifistChamber() {
-        document.body.style.backgroundColor = '#12121f';
-        arena.style.backgroundColor = '#161623';
-        arena.style.borderColor = '#ffffff';
-        document.getElementById('stat-name').innerText = "PLAYER LV 1";
-        document.getElementById('stat-hp-box').innerHTML = "Clicks: <span id='player-hp'>0</span>";
-        boss.style.left = '225px';
-        boss.style.top = '170px';
-        soul.style.display = 'none';
-        actionMenu.style.display = 'none';
-        pacifistClicks = 0;
-        karmaPoints = 0;
-        lastClickTime = Date.now();
-        dialogue.innerText = "A quiet ghost appears. What are your intentions?";
-        moveGhostRandomly();
+    function startGlobalTimer() {
+        clearInterval(countdownInterval);
+        countdownInterval = setInterval(() => {
+            if (!isBattleActive) {
+                clearInterval(countdownInterval);
+                return;
+            }
+            timeLeft--;
+            dialogue.innerText = `* Time Remaining: ${timeLeft}s`;
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                endGameSequence(chosenRoute === 'pacifist' || bossHp < 300);
+            }
+        }, 1000);
     }
-
-    function moveGhostRandomly() {
-        if (!isBattleActive || chosenRoute !== 'pacifist') return;
-        const maxX = arena.clientWidth - boss.clientWidth;
-        const maxY = arena.clientHeight - boss.clientHeight;
-        boss.style.left = Math.floor(Math.random() * maxX) + 'px';
-        boss.style.top = Math.floor(Math.random() * maxY) + 'px';
-    }
-
-    function spawnParticle(x, y, symbol) {
-        const part = document.createElement('div');
-        part.classList.add('heart-pop');
-        part.innerText = symbol;
-        part.style.left = x + 'px';
-        part.style.top = y + 'px';
-        arena.appendChild(part);
-        setTimeout(() => { part.remove(); }, 600);
-    }
-
 
         // ================= GENOCIDE ENGINE =================
         function setupGenocideFight() {
