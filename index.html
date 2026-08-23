@@ -103,20 +103,20 @@
         const scoreDisplay = document.getElementById('score');
         const dialogue = document.getElementById('dialogue');
 
-        // STEP 2: Create a variable to keep track of the score
+        // STEP 2: Variables to track standard score and boss properties
         let score = 0;
+        let isBossFight = false;
+        let bossInterval; // This will hold the automated timer loop
+        let bossHP = 10;
 
         // STEP 3: The math function that moves the ghost to a random spot
         function moveGhost() {
-            // We subtract the ghost's size so it doesn't accidentally clip out of the right/bottom borders
             const maxX = container.clientWidth - ghost.clientWidth;
             const maxY = container.clientHeight - ghost.clientHeight;
             
-            // Pick a random whole number between 0 and the max boundaries
             const randomX = Math.floor(Math.random() * maxX);
             const randomY = Math.floor(Math.random() * maxY);
             
-            // Apply the new pixel positions to the ghost's CSS styles
             ghost.style.left = randomX + 'px';
             ghost.style.top = randomY + 'px';
         }
@@ -125,49 +125,81 @@
         function spawnHeart(x, y) {
             const heart = document.createElement('div');
             heart.classList.add('heart-pop');
-            heart.innerText = '💖';
+            // If it's a boss fight, spawn broken hearts instead!
+            heart.innerText = isBossFight ? '💔' : '💖';
             heart.style.left = x + 'px';
             heart.style.top = y + 'px';
             container.appendChild(heart);
 
-            // Automatically delete the heart from the code after 600 milliseconds so the game stays clean
             setTimeout(() => {
                 heart.remove();
             }, 600);
         }
 
-        // STEP 5: Tell the computer to wait and listen for a click on the ghost
-        ghost.addEventListener('click', (e) => {
-            // Increase score by 1 and update the text on the screen
-            score++;
-            scoreDisplay.innerText = score;
+        // STEP 5: This function triggers the chaotic boss fight phase
+        function startBossFight() {
+            isBossFight = true;
+            ghost.innerText = '👻💢'; // Make the ghost look mad
+            container.style.borderColor = '#ff4d6d'; // Turn the box border pink/red
+            dialogue.style.color = '#ff4d6d';
+            dialogue.innerText = "WAIT A MINUTE! That's too much affection! PREPARE TO BATTLE!!!";
 
+            // BOSS MECHANIC: Move the ghost automatically every 500 milliseconds (0.5 seconds)
+            bossInterval = setInterval(() => {
+                moveGhost();
+            }, 500);
+        }
+
+        // STEP 6: Tell the computer to wait and listen for a click on the ghost
+        ghost.addEventListener('click', (e) => {
             // Calculate exactly where your mouse clicked inside the game box
             const rect = container.getBoundingClientRect();
             const x = e.clientX - rect.left - 12;
             const y = e.clientY - rect.top - 25;
-
-            // Trigger the heart explosion and move the ghost to a new spot
             spawnHeart(x, y);
-            moveGhost();
 
-            // STEP 6: Check the score variable and change the text based on milestones!
-            if (score === 1) {
-                dialogue.innerText = "What are you doing?";
-            } else if (score === 5) {
-                dialogue.innerText = "Haha, that tickles!";
-            } else if (score === 10) {
-                dialogue.innerText = "Haha!";
-            } else if (score === 20) {
-                dialogue.innerText = "best friends ?";
-            } else if (score === 35) {
-                dialogue.innerText = "My heart is melting!";
-            } else if (score === 50) {
-                dialogue.innerText = "Keep clicking! I love the attention!";
+            // PHASE 1: Normal Clicker Mode
+            if (!isBossFight) {
+                score++;
+                scoreDisplay.innerText = score;
+                moveGhost();
+
+                // Using your awesome custom text milestones!
+                if (score === 1) {
+                    dialogue.innerText = "What are you doing?";
+                } else if (score === 5) {
+                    dialogue.innerText = "Haha, that tickles!";
+                } else if (score === 10) {
+                    dialogue.innerText = "Haha!";
+                } else if (score === 20) {
+                    dialogue.innerText = "best friends ?";
+                } else if (score === 35) {
+                    dialogue.innerText = "My heart is melting!";
+                } else if (score === 50) {
+                    // Trigger the boss fight at 50!
+                    startBossFight();
+                }
+            } 
+            // PHASE 2: Boss Fight Mode!
+            else {
+                bossHP--;
+                dialogue.innerText = `Ouch! Stop! Boss HP remaining: ${bossHP}`;
+                moveGhost(); // Extra movement shift when clicked to dodge your mouse
+
+                // Check for victory
+                if (bossHP <= 0) {
+                    clearInterval(bossInterval); // Stop the automated movement loop
+                    ghost.innerText = '👑👻'; // Give the ghost a crown
+                    ghost.style.left = '175px'; // Center the ghost perfectly
+                    ghost.style.top = '175px';
+                    container.style.borderColor = '#ffd700'; // Gold border
+                    dialogue.style.color = '#00ffcc';
+                    dialogue.innerText = "YOU WIN! The ghost accepted your overwhelming love. You are officially best friends forever!";
+                }
             }
         });
 
-        // Run this function once right at the start so the ghost isn't stuck in the top corner when the page loads
+        // Run this function once right at the start
         moveGhost();
     </script>
 </body>
