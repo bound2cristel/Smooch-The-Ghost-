@@ -1,3 +1,8 @@
+ChatGPT said:
+Yep. Replace your current index.html with this version. It adds synthesized sound effects through the browser's Web Audio API, so you don't need any .mp3 or .wav files.
+
+One browser limitation: sound usually can't start until you interact with the page, so the first click on INITIALISE MATRIX unlocks the audio.
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,9 +38,7 @@
             text-align: center;
             width: 380px;
             max-width: calc(100vw - 30px);
-            transition:
-                border-color 0.5s ease,
-                box-shadow 0.5s ease;
+            transition: border-color 0.5s ease, box-shadow 0.5s ease;
         }
 
         #menu-title {
@@ -72,7 +75,6 @@
         #route-genocide.active {
             background-color: #ff0000;
             color: #ffffff;
-            border-color: #ffffff;
         }
 
         #start-btn {
@@ -93,6 +95,17 @@
         #start-btn:hover {
             background-color: #00ffcc;
             border-color: #00ffcc;
+        }
+
+        #sound-btn {
+            background: #111111;
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            padding: 7px 12px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-family: "Courier New", Courier, monospace;
+            border-radius: 4px;
         }
 
         #battle-arena {
@@ -120,7 +133,6 @@
             border: 2px solid #ffffff;
             margin-bottom: 10px;
             display: none;
-            position: relative;
         }
 
         #boss-hp-fill {
@@ -153,8 +165,6 @@
 
         #player-soul {
             position: absolute;
-            bottom: 50px;
-            left: 240px;
             font-size: 20px;
             width: 20px;
             height: 20px;
@@ -169,9 +179,7 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            box-shadow:
-                0 0 6px #ffffff,
-                0 0 12px #aaffff;
+            box-shadow: 0 0 6px #ffffff, 0 0 12px #aaffff;
             pointer-events: none;
             z-index: 4;
         }
@@ -217,10 +225,6 @@
             color: #ffff00;
             border-color: #ffff00;
             background-color: #221100;
-        }
-
-        .menu-btn:active {
-            transform: scale(0.96);
         }
 
         #player-stats {
@@ -340,628 +344,962 @@
 
 <body>
 
-    <!-- ================= MENU ================= -->
+<div id="menu-screen">
 
-    <div id="menu-screen">
-        <h2
-            id="menu-title"
-            style="color: #ffffff; margin-top: 0; letter-spacing: 2px;"
-        >
-            GHOST REPOSITORY
-        </h2>
+    <h2
+        id="menu-title"
+        style="color:#ffffff;margin-top:0;letter-spacing:2px;"
+    >
+        GHOST REPOSITORY
+    </h2>
 
-        <p style="margin: 10px 0 5px 0; color: #888; font-size: 13px;">
-            CORE PROTOCOL:
-        </p>
+    <p style="margin:10px 0 5px;color:#888;font-size:13px;">
+        CORE PROTOCOL:
+    </p>
 
-        <button
-            id="route-pacifist"
-            class="toggle-btn active"
-            onclick="setRoute('pacifist')"
-        >
-            [ PACIFIST PATH ]
-        </button>
+    <button
+        id="route-pacifist"
+        class="toggle-btn active"
+        onclick="setRoute('pacifist')"
+    >
+        [ PACIFIST PATH ]
+    </button>
 
-        <button
-            id="route-genocide"
-            class="toggle-btn"
-            onclick="setRoute('genocide')"
-        >
-            [ HARDCORE GENOCIDE ]
-        </button>
+    <button
+        id="route-genocide"
+        class="toggle-btn"
+        onclick="setRoute('genocide')"
+    >
+        [ HARDCORE GENOCIDE ]
+    </button>
 
-        <p style="margin: 15px 0 5px 0; color: #888; font-size: 13px;">
-            CHAMBER MODIFIER:
-        </p>
+    <p style="margin:15px 0 5px;color:#888;font-size:13px;">
+        CHAMBER MODIFIER:
+    </p>
 
-        <button
-            id="mod-relaxed"
-            class="toggle-btn active"
-            onclick="setModifier('relaxed')"
-        >
-            [ RELAXED CHAMBER ]
-        </button>
+    <button
+        id="mod-relaxed"
+        class="toggle-btn active"
+        onclick="setModifier('relaxed')"
+    >
+        [ RELAXED CHAMBER ]
+    </button>
 
-        <button
-            id="mod-timer"
-            class="toggle-btn"
-            onclick="setModifier('timer')"
-        >
-            [ 30s COUNTDOWN ]
-        </button>
+    <button
+        id="mod-timer"
+        class="toggle-btn"
+        onclick="setModifier('timer')"
+    >
+        [ 30s COUNTDOWN ]
+    </button>
 
-        <button
-            id="mod-mirror"
-            class="toggle-btn"
-            onclick="setModifier('mirror')"
-        >
-            [ KINETIC MIRROR ]
-        </button>
+    <button
+        id="mod-mirror"
+        class="toggle-btn"
+        onclick="setModifier('mirror')"
+    >
+        [ KINETIC MIRROR ]
+    </button>
 
-        <p
-            style="
-                color: #666666;
-                font-size: 11px;
-                margin-top: 15px;
-                font-style: italic;
-            "
-        >
-            credits to fucking max for the fucking idea of the battle i fucking
-            guess
-        </p>
+    <p style="
+        color:#666;
+        font-size:11px;
+        margin-top:15px;
+        font-style:italic;
+    ">
+        credits to fucking max for the fucking idea of the battle i fucking guess
+    </p>
 
-        <button id="start-btn" onclick="launchGame()">
-            INITIALISE MATRIX
-        </button>
+    <button id="start-btn" onclick="launchGame()">
+        INITIALISE MATRIX
+    </button>
+
+    <button id="sound-btn" onclick="toggleSound()">
+        🔊 SOUND: ON
+    </button>
+
+</div>
+
+<div id="boss-hp-bar">
+    <div id="boss-hp-fill"></div>
+</div>
+
+<div id="player-stats">
+
+    <div id="stat-name" style="color:#ffffff;">
+        PLAYER LV 1
     </div>
 
-    <!-- ================= HUD ================= -->
-
-    <div id="boss-hp-bar">
-        <div id="boss-hp-fill"></div>
+    <div id="stat-hp-box" style="color:#ff4d6d;">
+        HP:
+        <span id="player-hp">99</span>
+        /
+        <span id="player-max-hp">99</span>
     </div>
 
-    <div id="player-stats">
-        <div id="stat-name" style="color: #ffffff;">
-            PLAYER LV 1
-        </div>
+</div>
 
-        <div id="stat-hp-box" style="color: #ff4d6d;">
-            HP:
-            <span id="player-hp">99</span>
-            /
-            <span id="player-max-hp">99</span>
-        </div>
+<div id="battle-arena">
+
+    <div
+        id="ghost-boss"
+        style="left:220px;top:170px;"
+    >
+        👻
     </div>
 
-    <!-- ================= ARENA ================= -->
+    <div
+        id="player-soul"
+        style="display:none;"
+    >
+        ❤️
+    </div>
 
-    <div id="battle-arena">
+</div>
 
-        <div
-            id="ghost-boss"
-            style="left: 220px; top: 170px;"
+<div id="ui-box">
+
+    <div id="dialogue">
+        Calibrating personality matrices...
+    </div>
+
+    <div id="action-menu" style="display:none;">
+
+        <button
+            class="menu-btn"
+            onclick="executePlayerAttack()"
         >
-            👻
-        </div>
+            [ FIGHT ]
+        </button>
 
-        <div
-            id="player-soul"
-            style="display: none;"
+        <button
+            class="menu-btn"
+            onclick="attemptMercy()"
         >
-            ❤️
-        </div>
+            [ MERCY ]
+        </button>
 
     </div>
 
-    <!-- ================= DIALOGUE ================= -->
+</div>
 
-    <div id="ui-box">
+<script>
+"use strict";
 
-        <div id="dialogue">
-            Calibrating personality matrices...
-        </div>
+/* ============================================================
+   DOM
+============================================================ */
 
-        <div id="action-menu" style="display: none;">
+const arena = document.getElementById("battle-arena");
+const soul = document.getElementById("player-soul");
+const boss = document.getElementById("ghost-boss");
 
-            <button
-                class="menu-btn"
-                onclick="executePlayerAttack()"
-            >
-                [ FIGHT ]
-            </button>
+const dialogue = document.getElementById("dialogue");
+const bossHpFill = document.getElementById("boss-hp-fill");
 
-            <button
-                class="menu-btn"
-                onclick="attemptMercy()"
-            >
-                [ MERCY ]
-            </button>
+const playerHpDisplay = document.getElementById("player-hp");
+const playerMaxHpDisplay = document.getElementById("player-max-hp");
 
-        </div>
-    </div>
+const menuScreen = document.getElementById("menu-screen");
+const menuTitle = document.getElementById("menu-title");
+const startBtn = document.getElementById("start-btn");
 
-    <script>
-        "use strict";
+const actionMenu = document.getElementById("action-menu");
+const playerStats = document.getElementById("player-stats");
+const bossHpBar = document.getElementById("boss-hp-bar");
 
-        // ============================================================
-        // DOM REFERENCES
-        // ============================================================
+/* ============================================================
+   GAME STATE
+============================================================ */
 
-        const arena = document.getElementById("battle-arena");
-        const soul = document.getElementById("player-soul");
-        const boss = document.getElementById("ghost-boss");
+let chosenRoute = "pacifist";
+let chosenModifier = "relaxed";
 
-        const dialogue = document.getElementById("dialogue");
-        const bossHpFill = document.getElementById("boss-hp-fill");
+const MAX_BOSS_HP = 600;
+const MAX_PLAYER_HP = 99;
 
-        const playerHpDisplay = document.getElementById("player-hp");
-        const playerMaxHpDisplay = document.getElementById("player-max-hp");
+let bossHp = MAX_BOSS_HP;
+let playerHp = MAX_PLAYER_HP;
 
-        const menuScreen = document.getElementById("menu-screen");
-        const menuTitle = document.getElementById("menu-title");
-        const menuText = document.getElementById("menu-text");
+let isBattleActive = false;
+let gameEnding = false;
 
-        const startBtn = document.getElementById("start-btn");
-        const actionMenu = document.getElementById("action-menu");
-        const playerStats = document.getElementById("player-stats");
-        const bossHpBar = document.getElementById("boss-hp-bar");
+let timeLeft = 30;
 
-        // ============================================================
-        // GAME STATE
-        // ============================================================
+let countdownInterval = null;
+let attackCycle = null;
+let mirrorCycle = null;
+let pacifistMoveCycle = null;
 
-        let chosenRoute = "pacifist";
-        let chosenModifier = "relaxed";
+let bullets = [];
 
-        let timeLeft = 30;
-        let countdownInterval = null;
+let soulX = 240;
+let soulY = 320;
 
-        const MAX_BOSS_HP = 600;
-        const MAX_PLAYER_HP = 99;
+let pacifistClicks = 0;
+let karmaPoints = 0;
+let lastClickTime = 0;
 
-        let bossHp = MAX_BOSS_HP;
-        let playerHp = MAX_PLAYER_HP;
+/* ============================================================
+   AUDIO ENGINE
+============================================================ */
 
-        let isBattleActive = false;
+let audioContext = null;
+let masterGain = null;
 
-        let attackCycle = null;
-        let mirrorCycle = null;
-        let pacifistMoveCycle = null;
+let soundEnabled = true;
+let audioUnlocked = false;
 
-        let bullets = [];
+function initAudio() {
 
-        let soulX = 240;
-        let soulY = 320;
-
-        let pacifistClicks = 0;
-        let karmaPoints = 0;
-        let lastClickTime = 0;
-
-        let gameEnding = false;
-
-        // ============================================================
-        // ROUTE / MODIFIER SELECTION
-        // ============================================================
-
-        function setModifier(mod) {
-            chosenModifier = mod;
-
-            document
-                .getElementById("mod-relaxed")
-                .classList.remove("active");
-
-            document
-                .getElementById("mod-timer")
-                .classList.remove("active");
-
-            document
-                .getElementById("mod-mirror")
-                .classList.remove("active");
-
-            document
-                .getElementById("mod-" + mod)
-                .classList.add("active");
+    if (audioUnlocked && audioContext) {
+        if (audioContext.state === "suspended") {
+            audioContext.resume();
         }
 
-        function setRoute(route) {
-            chosenRoute = route;
+        return;
+    }
 
-            document
-                .getElementById("route-pacifist")
-                .classList.remove("active");
+    try {
 
-            document
-                .getElementById("route-genocide")
-                .classList.remove("active");
+        audioContext =
+            new (window.AudioContext ||
+                window.webkitAudioContext)();
 
-            document
-                .getElementById("route-" + route)
-                .classList.add("active");
+        masterGain =
+            audioContext.createGain();
 
-            if (route === "genocide") {
-                menuScreen.style.borderColor = "#ff0000";
-                menuTitle.style.color = "#ff0000";
-            } else {
-                menuScreen.style.borderColor = "#ffffff";
-                menuTitle.style.color = "#ffffff";
-            }
+        masterGain.gain.value = 0.16;
 
-            menuScreen.style.boxShadow = "none";
+        masterGain.connect(
+            audioContext.destination
+        );
+
+        audioUnlocked = true;
+
+    } catch (error) {
+
+        console.warn(
+            "Web Audio is unavailable.",
+            error
+        );
+
+    }
+}
+
+function toggleSound() {
+
+    initAudio();
+
+    soundEnabled = !soundEnabled;
+
+    document.getElementById("sound-btn").innerText =
+        soundEnabled
+            ? "🔊 SOUND: ON"
+            : "🔇 SOUND: OFF";
+
+    if (soundEnabled) {
+        playSelectSound();
+    }
+}
+
+function playTone(
+    frequency,
+    duration,
+    type = "sine",
+    volume = 0.15,
+    slideTo = null
+) {
+
+    if (!soundEnabled) return;
+
+    initAudio();
+
+    if (!audioContext || !masterGain) return;
+
+    const oscillator =
+        audioContext.createOscillator();
+
+    const gain =
+        audioContext.createGain();
+
+    oscillator.type = type;
+
+    oscillator.frequency.setValueAtTime(
+        frequency,
+        audioContext.currentTime
+    );
+
+    if (slideTo !== null) {
+
+        oscillator.frequency.exponentialRampToValueAtTime(
+            Math.max(1, slideTo),
+            audioContext.currentTime + duration
+        );
+
+    }
+
+    gain.gain.setValueAtTime(
+        0.0001,
+        audioContext.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        volume,
+        audioContext.currentTime + 0.01
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        audioContext.currentTime + duration
+    );
+
+    oscillator.connect(gain);
+    gain.connect(masterGain);
+
+    oscillator.start();
+
+    oscillator.stop(
+        audioContext.currentTime + duration + 0.02
+    );
+}
+
+/* ============================================================
+   NOISE GENERATOR
+============================================================ */
+
+function playNoise(
+    duration = 0.15,
+    volume = 0.12
+) {
+
+    if (!soundEnabled) return;
+
+    initAudio();
+
+    if (!audioContext || !masterGain) return;
+
+    const bufferSize =
+        audioContext.sampleRate * duration;
+
+    const buffer =
+        audioContext.createBuffer(
+            1,
+            bufferSize,
+            audioContext.sampleRate
+        );
+
+    const data =
+        buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+
+        data[i] =
+            Math.random() * 2 - 1;
+
+    }
+
+    const source =
+        audioContext.createBufferSource();
+
+    const gain =
+        audioContext.createGain();
+
+    source.buffer = buffer;
+
+    gain.gain.setValueAtTime(
+        volume,
+        audioContext.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        audioContext.currentTime + duration
+    );
+
+    source.connect(gain);
+    gain.connect(masterGain);
+
+    source.start();
+}
+
+/* ============================================================
+   SOUND EFFECTS
+============================================================ */
+
+function playSelectSound() {
+
+    playTone(
+        420,
+        0.07,
+        "square",
+        0.08,
+        620
+    );
+}
+
+function playGhostSound() {
+
+    playTone(
+        220,
+        0.35,
+        "sine",
+        0.08,
+        130
+    );
+
+    setTimeout(() => {
+
+        playTone(
+            165,
+            0.45,
+            "sine",
+            0.06,
+            100
+        );
+
+    }, 120);
+}
+
+function playPacifistSound() {
+
+    playTone(
+        523.25,
+        0.12,
+        "sine",
+        0.13,
+        659.25
+    );
+
+    setTimeout(() => {
+
+        playTone(
+            783.99,
+            0.16,
+            "sine",
+            0.11,
+            1046.5
+        );
+
+    }, 80);
+}
+
+function playHeartBreakSound() {
+
+    playTone(
+        280,
+        0.18,
+        "sawtooth",
+        0.10,
+        130
+    );
+
+    playNoise(
+        0.08,
+        0.05
+    );
+}
+
+function playSlashSound() {
+
+    playNoise(
+        0.12,
+        0.12
+    );
+
+    playTone(
+        850,
+        0.09,
+        "sawtooth",
+        0.08,
+        180
+    );
+}
+
+function playHitSound() {
+
+    playTone(
+        90,
+        0.18,
+        "square",
+        0.15,
+        45
+    );
+
+    playNoise(
+        0.13,
+        0.08
+    );
+}
+
+function playDamageSound() {
+
+    playTone(
+        150,
+        0.18,
+        "square",
+        0.13,
+        60
+    );
+
+    setTimeout(() => {
+
+        playTone(
+            75,
+            0.20,
+            "sawtooth",
+            0.08,
+            40
+        );
+
+    }, 50);
+}
+
+function playCountdownSound() {
+
+    playTone(
+        timeLeft <= 5 ? 880 : 440,
+        0.08,
+        "square",
+        0.08
+    );
+}
+
+function playMirrorSound() {
+
+    playTone(
+        150,
+        0.25,
+        "sawtooth",
+        0.06,
+        600
+    );
+
+    playTone(
+        310,
+        0.25,
+        "triangle",
+        0.05,
+        100
+    );
+}
+
+function playVictorySound() {
+
+    const notes = [
+        523.25,
+        659.25,
+        783.99,
+        1046.5
+    ];
+
+    notes.forEach((note, index) => {
+
+        setTimeout(() => {
+
+            playTone(
+                note,
+                0.25,
+                "sine",
+                0.13
+            );
+
+        }, index * 130);
+
+    });
+}
+
+function playGameOverSound() {
+
+    playTone(
+        220,
+        0.35,
+        "sawtooth",
+        0.12,
+        100
+    );
+
+    setTimeout(() => {
+
+        playTone(
+            150,
+            0.5,
+            "sawtooth",
+            0.10,
+            55
+        );
+
+    }, 200);
+
+    setTimeout(() => {
+
+        playNoise(
+            0.4,
+            0.06
+        );
+
+    }, 350);
+}
+
+/* ============================================================
+   ROUTE SELECTION
+============================================================ */
+
+function setModifier(mod) {
+
+    chosenModifier = mod;
+
+    document
+        .getElementById("mod-relaxed")
+        .classList.remove("active");
+
+    document
+        .getElementById("mod-timer")
+        .classList.remove("active");
+
+    document
+        .getElementById("mod-mirror")
+        .classList.remove("active");
+
+    document
+        .getElementById("mod-" + mod)
+        .classList.add("active");
+
+    playSelectSound();
+}
+
+function setRoute(route) {
+
+    chosenRoute = route;
+
+    document
+        .getElementById("route-pacifist")
+        .classList.remove("active");
+
+    document
+        .getElementById("route-genocide")
+        .classList.remove("active");
+
+    document
+        .getElementById("route-" + route)
+        .classList.add("active");
+
+    if (route === "genocide") {
+
+        menuScreen.style.borderColor =
+            "#ff0000";
+
+        menuTitle.style.color =
+            "#ff0000";
+
+    } else {
+
+        menuScreen.style.borderColor =
+            "#ffffff";
+
+        menuTitle.style.color =
+            "#ffffff";
+    }
+
+    menuScreen.style.boxShadow =
+        "none";
+
+    playSelectSound();
+}
+
+/* ============================================================
+   RESET
+============================================================ */
+
+function clearAllTimers() {
+
+    if (countdownInterval !== null) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+    }
+
+    if (attackCycle !== null) {
+        clearInterval(attackCycle);
+        attackCycle = null;
+    }
+
+    if (mirrorCycle !== null) {
+        clearInterval(mirrorCycle);
+        mirrorCycle = null;
+    }
+
+    if (pacifistMoveCycle !== null) {
+        clearInterval(pacifistMoveCycle);
+        pacifistMoveCycle = null;
+    }
+}
+
+function resetGameState() {
+
+    clearAllTimers();
+
+    bullets.forEach(bullet => {
+
+        if (
+            bullet.element &&
+            bullet.element.parentNode
+        ) {
+            bullet.element.remove();
         }
 
-        // ============================================================
-        // GAME RESET
-        // ============================================================
+    });
 
-        function resetGameState() {
-            clearAllTimers();
+    bullets = [];
 
-            bullets.forEach(function (bullet) {
-                if (bullet.element && bullet.element.parentNode) {
-                    bullet.element.remove();
-                }
-            });
+    bossHp = MAX_BOSS_HP;
+    playerHp = MAX_PLAYER_HP;
 
-            bullets = [];
+    timeLeft = 30;
 
-            bossHp = MAX_BOSS_HP;
-            playerHp = MAX_PLAYER_HP;
+    pacifistClicks = 0;
+    karmaPoints = 0;
+    lastClickTime = 0;
 
-            timeLeft = 30;
+    soulX = 240;
+    soulY = 320;
 
-            pacifistClicks = 0;
-            karmaPoints = 0;
-            lastClickTime = 0;
+    gameEnding = false;
 
-            soulX = 240;
-            soulY = 320;
+    playerHpDisplay.innerText =
+        MAX_PLAYER_HP;
 
-            gameEnding = false;
+    playerMaxHpDisplay.innerText =
+        MAX_PLAYER_HP;
 
-            playerHpDisplay.innerText = MAX_PLAYER_HP;
-            playerMaxHpDisplay.innerText = MAX_PLAYER_HP;
+    bossHpFill.style.width =
+        "100%";
 
-            bossHpFill.style.width = "100%";
+    arena.style.transform =
+        "rotate(0deg) scale(1)";
 
-            arena.style.transform = "rotate(0deg) scale(1)";
+    boss.style.left =
+        "220px";
 
-            boss.style.left = "220px";
-            boss.style.top = "170px";
-            boss.style.transform = "translateX(0)";
+    boss.style.top =
+        "170px";
 
-            soul.style.left = "240px";
-            soul.style.top = "320px";
+    boss.style.transform =
+        "translateX(0)";
 
-            document.body.style.backgroundColor = "#12121f";
+    soul.style.left =
+        "240px";
 
-            menuTitle.innerText = "GHOST REPOSITORY";
+    soul.style.top =
+        "320px";
 
-            if (chosenRoute === "genocide") {
-                menuTitle.style.color = "#ff0000";
-                menuScreen.style.borderColor = "#ff0000";
-            } else {
-                menuTitle.style.color = "#ffffff";
-                menuScreen.style.borderColor = "#ffffff";
+    document.body.style.backgroundColor =
+        "#12121f";
+
+    menuTitle.innerText =
+        "GHOST REPOSITORY";
+
+    menuScreen.style.boxShadow =
+        "none";
+
+    if (chosenRoute === "genocide") {
+
+        menuTitle.style.color =
+            "#ff0000";
+
+        menuScreen.style.borderColor =
+            "#ff0000";
+
+    } else {
+
+        menuTitle.style.color =
+            "#ffffff";
+
+        menuScreen.style.borderColor =
+            "#ffffff";
+    }
+
+    startBtn.innerText =
+        "INITIALISE MATRIX";
+}
+
+/* ============================================================
+   START GAME
+============================================================ */
+
+function launchGame() {
+
+    initAudio();
+
+    playSelectSound();
+
+    resetGameState();
+
+    menuScreen.style.display =
+        "none";
+
+    arena.style.display =
+        "block";
+
+    playerStats.style.display =
+        "flex";
+
+    document.getElementById("ui-box")
+        .style.display =
+        "block";
+
+    isBattleActive = true;
+
+    if (chosenModifier === "timer") {
+        startGlobalTimer();
+    }
+
+    if (chosenModifier === "mirror") {
+        startMirrorModifier();
+    }
+
+    if (chosenRoute === "genocide") {
+        setupGenocideFight();
+    } else {
+        setupPacifistChamber();
+    }
+}
+
+/* ============================================================
+   TIMER
+============================================================ */
+
+function startGlobalTimer() {
+
+    clearInterval(countdownInterval);
+
+    timeLeft = 30;
+
+    updateTimerDialogue();
+
+    countdownInterval =
+        setInterval(() => {
+
+            if (!isBattleActive) {
+
+                clearInterval(
+                    countdownInterval
+                );
+
+                return;
             }
 
-            menuScreen.style.boxShadow = "none";
-
-            startBtn.innerText = "INITIALISE MATRIX";
-        }
-
-        function clearAllTimers() {
-            if (countdownInterval !== null) {
-                clearInterval(countdownInterval);
-                countdownInterval = null;
-            }
-
-            if (attackCycle !== null) {
-                clearInterval(attackCycle);
-                attackCycle = null;
-            }
-
-            if (mirrorCycle !== null) {
-                clearInterval(mirrorCycle);
-                mirrorCycle = null;
-            }
-
-            if (pacifistMoveCycle !== null) {
-                clearInterval(pacifistMoveCycle);
-                pacifistMoveCycle = null;
-            }
-        }
-
-        // ============================================================
-        // LAUNCH
-        // ============================================================
-
-        function launchGame() {
-            resetGameState();
-
-            menuScreen.style.display = "none";
-
-            arena.style.display = "block";
-            playerStats.style.display = "flex";
-            document.getElementById("ui-box").style.display = "block";
-
-            isBattleActive = true;
-
-            if (chosenModifier === "timer") {
-                startGlobalTimer();
-            }
-
-            if (chosenModifier === "mirror") {
-                startMirrorModifier();
-            }
-
-            if (chosenRoute === "genocide") {
-                setupGenocideFight();
-            } else {
-                setupPacifistChamber();
-            }
-        }
-
-        // ============================================================
-        // GLOBAL TIMER
-        // ============================================================
-
-        function startGlobalTimer() {
-            clearInterval(countdownInterval);
-
-            timeLeft = 30;
+            timeLeft--;
 
             updateTimerDialogue();
 
-            countdownInterval = setInterval(function () {
-                if (!isBattleActive) {
-                    clearInterval(countdownInterval);
-                    countdownInterval = null;
-                    return;
-                }
-
-                timeLeft--;
-
-                updateTimerDialogue();
-
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    countdownInterval = null;
-
-                    if (chosenRoute === "pacifist") {
-                        endGameSequence(true);
-                    } else {
-                        endGameSequence(false);
-                    }
-                }
-            }, 1000);
-        }
-
-        function updateTimerDialogue() {
-            if (chosenModifier === "timer" && isBattleActive) {
-                dialogue.innerText =
-                    "* Time Remaining: " + Math.max(0, timeLeft) + "s";
-            }
-        }
-
-        // ============================================================
-        // GENOCIDE ENGINE
-        // ============================================================
-
-        function setupGenocideFight() {
-            document.body.style.backgroundColor = "#000000";
-
-            arena.style.backgroundColor = "#000000";
-            arena.style.borderColor = "#ffffff";
-
-            bossHpBar.style.display = "block";
-
-            document.getElementById("stat-name").innerText =
-                "PLAYER LV 19";
-
-            playerHp = MAX_PLAYER_HP;
-            playerHpDisplay.innerText = playerHp;
-
-            bossHp = MAX_BOSS_HP;
-            bossHpFill.style.width = "100%";
-
-            boss.style.left = "220px";
-            boss.style.top = "20px";
-            boss.style.transform = "translateX(0)";
-
-            soul.style.display = "block";
-            soul.style.left = soulX + "px";
-            soul.style.top = soulY + "px";
-
-            actionMenu.style.display = "flex";
-
-            dialogue.innerText =
-                "* The anomaly blocks the exit path.";
-
-            spawnBulletHell();
-        }
-
-        function spawnBulletHell() {
-            if (attackCycle !== null) {
-                clearInterval(attackCycle);
+            if (timeLeft <= 10) {
+                playCountdownSound();
             }
 
-            attackCycle = setInterval(function () {
-                if (!isBattleActive || chosenRoute !== "genocide") {
-                    return;
-                }
+            if (timeLeft <= 0) {
 
-                // Make the ghost move slightly.
-                const ghostOffset =
-                    Math.floor(Math.random() * 80) - 40;
+                clearInterval(
+                    countdownInterval
+                );
 
-                boss.style.transform =
-                    "translateX(" + ghostOffset + "px)";
-
-                const b = document.createElement("div");
-
-                b.classList.add("bullet");
-
-                const bossLeft =
-                    parseFloat(boss.style.left) || 220;
-
-                const bossTop =
-                    parseFloat(boss.style.top) || 20;
-
-                const startX = bossLeft + 25;
-                const startY = bossTop + 50;
-
-                b.style.left = startX + "px";
-                b.style.top = startY + "px";
-
-                arena.appendChild(b);
-
-                const diffX = soulX - startX;
-                const diffY = soulY - startY;
-
-                const distance =
-                    Math.sqrt(
-                        diffX * diffX +
-                        diffY * diffY
-                    ) || 1;
-
-                // Mirror modifier makes projectiles slightly faster.
-                const speedMagnitude =
-                    chosenModifier === "mirror"
-                        ? 5.5
-                        : 4.5;
-
-                const velX =
-                    (diffX / distance) *
-                    speedMagnitude;
-
-                const velY =
-                    (diffY / distance) *
-                    speedMagnitude;
-
-                bullets.push({
-                    element: b,
-                    x: startX,
-                    y: startY,
-                    vx: velX,
-                    vy: velY
-                });
-            }, 90);
-
-            requestAnimationFrame(updateProjectiles);
-        }
-
-        function updateProjectiles() {
-            if (!isBattleActive || chosenRoute !== "genocide") {
-                return;
-            }
-
-            for (let i = bullets.length - 1; i >= 0; i--) {
-                const b = bullets[i];
-
-                b.x += b.vx;
-                b.y += b.vy;
-
-                b.element.style.left = b.x + "px";
-                b.element.style.top = b.y + "px";
+                countdownInterval = null;
 
                 if (
-                    b.y > arena.clientHeight + 20 ||
-                    b.y < -20 ||
-                    b.x > arena.clientWidth + 20 ||
-                    b.x < -20
+                    chosenRoute === "pacifist"
                 ) {
-                    removeBullet(i);
-                    continue;
-                }
 
-                // Collision box around the soul.
-                if (
-                    Math.abs(
-                        b.x - (soulX + 10)
-                    ) < 14 &&
-                    Math.abs(
-                        b.y - (soulY + 10)
-                    ) < 14
-                ) {
-                    triggerPlayerDamage();
-                    removeBullet(i);
-                }
-            }
+                    endGameSequence(true);
 
-            if (isBattleActive) {
-                requestAnimationFrame(updateProjectiles);
-            }
-        }
-
-        function removeBullet(index) {
-            const bullet = bullets[index];
-
-            if (
-                bullet &&
-                bullet.element &&
-                bullet.element.parentNode
-            ) {
-                bullet.element.remove();
-            }
-
-            bullets.splice(index, 1);
-        }
-
-        // ============================================================
-        // PLAYER DAMAGE
-        // ============================================================
-
-        function triggerPlayerDamage() {
-            if (!isBattleActive) {
-                return;
-            }
-
-            playerHp -= 12;
-
-            if (playerHp < 0) {
-                playerHp = 0;
-            }
-
-            playerHpDisplay.innerText = playerHp;
-
-            flashDamage();
-
-            if (playerHp <= 0) {
-                endGameSequence(false);
-            }
-        }
-
-        function flashDamage() {
-            document.body.style.backgroundColor = "#4a0000";
-
-            const flash = document.createElement("div");
-            flash.className = "flash";
-
-            arena.appendChild(flash);
-
-            setTimeout(function () {
-                if (flash.parentNode) {
-                    flash.remove();
-                }
-            }, 130);
-
-            setTimeout(function () {
-                if (!isBattleActive) {
-                    document.body.style.backgroundColor =
-                        "#000000";
                 } else {
-                    document.body.style.backgroundColor =
-                        "#000000";
+
+                    endGameSequence(false);
                 }
-            }, 80);
-        }
+            }
 
-        // ============================================================
-        // GENOCIDE FIGHT
-        // ============================================================
+        }, 1000);
+}
 
-        function executePlayerAttack() {
+function updateTimerDialogue() {
+
+    if (
+        chosenModifier === "timer" &&
+        isBattleActive
+    ) {
+
+        dialogue.innerText =
+            "* Time Remaining: " +
+            Math.max(0, timeLeft) +
+            "s";
+    }
+}
+
+/* ============================================================
+   GENOCIDE MODE
+============================================================ */
+
+function setupGenocideFight() {
+
+    document.body.style.backgroundColor =
+        "#000000";
+
+    arena.style.backgroundColor =
+        "#000000";
+
+    arena.style.borderColor =
+        "#ffffff";
+
+    bossHpBar.style.display =
+        "block";
+
+    document.getElementById("stat-name")
+        .innerText =
+        "PLAYER LV 19";
+
+    playerHp =
+        MAX_PLAYER_HP;
+
+    playerHpDisplay.innerText =
+        playerHp;
+
+    bossHp =
+        MAX_BOSS_HP;
+
+    bossHpFill.style.width =
+        "100%";
+
+    boss.style.left =
+        "220px";
+
+    boss.style.top =
+        "20px";
+
+    soul.style.display =
+        "block";
+
+    soul.style.left =
+        soulX + "px";
+
+    soul.style.top =
+        soulY + "px";
+
+    actionMenu.style.display =
+        "flex";
+
+    dialogue.innerText =
+        "* The anomaly blocks the exit path.";
+
+    playGhostSound();
+
+    spawnBulletHell();
+}
+
+function spawnBulletHell() {
+
+    clearInterval(attackCycle);
+
+    attackCycle =
+        setInterval(() => {
+
             if (
                 !isBattleActive ||
                 chosenRoute !== "genocide"
@@ -969,640 +1307,1076 @@
                 return;
             }
 
-            const slice = document.createElement("div");
-
-            slice.classList.add("slice-effect");
-
-            slice.style.left = soulX + "px";
-            slice.style.top = Math.max(0, soulY - 100) + "px";
-
-            arena.appendChild(slice);
-
-            setTimeout(function () {
-                if (slice.parentNode) {
-                    slice.remove();
-                }
-            }, 150);
-
-            bossHp -= 50;
-
-            if (bossHp < 0) {
-                bossHp = 0;
-            }
-
-            bossHpFill.style.width =
-                (bossHp / MAX_BOSS_HP) * 100 + "%";
-
-            spawnDamageNumber(
-                boss.style.left,
-                boss.style.top,
-                "50"
-            );
+            const ghostOffset =
+                Math.floor(
+                    Math.random() * 80
+                ) - 40;
 
             boss.style.transform =
-                "translateX(0) scale(0.9)";
+                "translateX(" +
+                ghostOffset +
+                "px)";
 
-            setTimeout(function () {
-                if (isBattleActive) {
-                    boss.style.transform =
-                        "translateX(0) scale(1)";
-                }
-            }, 80);
+            const bullet =
+                document.createElement("div");
 
-            if (bossHp <= 0) {
-                endGameSequence(true);
-            } else {
-                dialogue.innerText =
-                    "* Real damage logged. Anomaly HP left: " +
-                    bossHp;
-            }
+            bullet.classList.add("bullet");
+
+            const bossLeft =
+                parseFloat(boss.style.left) ||
+                220;
+
+            const bossTop =
+                parseFloat(boss.style.top) ||
+                20;
+
+            const startX =
+                bossLeft + 25;
+
+            const startY =
+                bossTop + 50;
+
+            bullet.style.left =
+                startX + "px";
+
+            bullet.style.top =
+                startY + "px";
+
+            arena.appendChild(bullet);
+
+            const diffX =
+                soulX - startX;
+
+            const diffY =
+                soulY - startY;
+
+            const distance =
+                Math.sqrt(
+                    diffX * diffX +
+                    diffY * diffY
+                ) || 1;
+
+            const speed =
+                chosenModifier === "mirror"
+                    ? 5.5
+                    : 4.5;
+
+            const velocityX =
+                (diffX / distance) *
+                speed;
+
+            const velocityY =
+                (diffY / distance) *
+                speed;
+
+            bullets.push({
+                element: bullet,
+                x: startX,
+                y: startY,
+                vx: velocityX,
+                vy: velocityY
+            });
+
+        }, 90);
+
+    requestAnimationFrame(
+        updateProjectiles
+    );
+}
+
+function updateProjectiles() {
+
+    if (
+        !isBattleActive ||
+        chosenRoute !== "genocide"
+    ) {
+        return;
+    }
+
+    for (
+        let i = bullets.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const bullet =
+            bullets[i];
+
+        bullet.x += bullet.vx;
+        bullet.y += bullet.vy;
+
+        bullet.element.style.left =
+            bullet.x + "px";
+
+        bullet.element.style.top =
+            bullet.y + "px";
+
+        if (
+            bullet.y >
+                arena.clientHeight + 20 ||
+            bullet.y < -20 ||
+            bullet.x >
+                arena.clientWidth + 20 ||
+            bullet.x < -20
+        ) {
+
+            removeBullet(i);
+
+            continue;
         }
 
-        function attemptMercy() {
+        if (
+            Math.abs(
+                bullet.x -
+                (soulX + 10)
+            ) < 14 &&
+            Math.abs(
+                bullet.y -
+                (soulY + 10)
+            ) < 14
+        ) {
+
+            triggerPlayerDamage();
+
+            removeBullet(i);
+        }
+    }
+
+    if (isBattleActive) {
+
+        requestAnimationFrame(
+            updateProjectiles
+        );
+    }
+}
+
+function removeBullet(index) {
+
+    const bullet =
+        bullets[index];
+
+    if (
+        bullet &&
+        bullet.element &&
+        bullet.element.parentNode
+    ) {
+        bullet.element.remove();
+    }
+
+    bullets.splice(index, 1);
+}
+
+/* ============================================================
+   PLAYER DAMAGE
+============================================================ */
+
+function triggerPlayerDamage() {
+
+    if (!isBattleActive) {
+        return;
+    }
+
+    playerHp -= 12;
+
+    if (playerHp < 0) {
+        playerHp = 0;
+    }
+
+    playerHpDisplay.innerText =
+        playerHp;
+
+    playDamageSound();
+
+    flashDamage();
+
+    if (playerHp <= 24) {
+
+        document.getElementById(
+            "stat-hp-box"
+        ).style.color =
+            "#ff0000";
+    }
+
+    if (playerHp <= 0) {
+
+        endGameSequence(false);
+    }
+}
+
+function flashDamage() {
+
+    document.body.style.backgroundColor =
+        "#4a0000";
+
+    const flash =
+        document.createElement("div");
+
+    flash.className =
+        "flash";
+
+    arena.appendChild(flash);
+
+    setTimeout(() => {
+
+        if (flash.parentNode) {
+            flash.remove();
+        }
+
+    }, 130);
+
+    setTimeout(() => {
+
+        document.body.style.backgroundColor =
+            chosenRoute === "genocide"
+                ? "#000000"
+                : "#12121f";
+
+    }, 80);
+}
+
+/* ============================================================
+   ATTACK
+============================================================ */
+
+function executePlayerAttack() {
+
+    if (
+        !isBattleActive ||
+        chosenRoute !== "genocide"
+    ) {
+        return;
+    }
+
+    playSlashSound();
+
+    const slice =
+        document.createElement("div");
+
+    slice.classList.add(
+        "slice-effect"
+    );
+
+    slice.style.left =
+        soulX + "px";
+
+    slice.style.top =
+        Math.max(
+            0,
+            soulY - 100
+        ) + "px";
+
+    arena.appendChild(slice);
+
+    setTimeout(() => {
+
+        if (slice.parentNode) {
+            slice.remove();
+        }
+
+    }, 150);
+
+    bossHp -= 50;
+
+    if (bossHp < 0) {
+        bossHp = 0;
+    }
+
+    bossHpFill.style.width =
+        (bossHp / MAX_BOSS_HP) *
+        100 +
+        "%";
+
+    playHitSound();
+
+    spawnDamageNumber(
+        boss.style.left,
+        boss.style.top,
+        50
+    );
+
+    boss.style.transform =
+        "translateX(0) scale(0.9)";
+
+    setTimeout(() => {
+
+        if (isBattleActive) {
+
+            boss.style.transform =
+                "translateX(0) scale(1)";
+        }
+
+    }, 80);
+
+    if (bossHp <= 0) {
+
+        endGameSequence(true);
+
+    } else {
+
+        dialogue.innerText =
+            "* Real damage logged. Anomaly HP left: " +
+            bossHp;
+    }
+}
+
+/* ============================================================
+   MERCY
+============================================================ */
+
+function attemptMercy() {
+
+    if (!isBattleActive) {
+        return;
+    }
+
+    if (chosenRoute === "genocide") {
+
+        playTone(
+            100,
+            0.15,
+            "square",
+            0.06
+        );
+
+        dialogue.innerText =
+            "* Your hands remain covered in static dust. MERCY is locked out.";
+
+    } else {
+
+        dialogue.innerText =
+            "* You cannot attack the ghost on this route. Try interacting with it.";
+    }
+}
+
+/* ============================================================
+   DAMAGE NUMBER
+============================================================ */
+
+function spawnDamageNumber(
+    x,
+    y,
+    amount
+) {
+
+    const number =
+        document.createElement("div");
+
+    number.className =
+        "damage-number";
+
+    number.innerText =
+        "-" + amount;
+
+    number.style.left =
+        parseFloat(x || 220) +
+        20 +
+        "px";
+
+    number.style.top =
+        parseFloat(y || 20) +
+        "px";
+
+    arena.appendChild(number);
+
+    setTimeout(() => {
+
+        if (number.parentNode) {
+            number.remove();
+        }
+
+    }, 700);
+}
+
+/* ============================================================
+   PACIFIST MODE
+============================================================ */
+
+function setupPacifistChamber() {
+
+    document.body.style.backgroundColor =
+        "#12121f";
+
+    arena.style.backgroundColor =
+        "#161623";
+
+    arena.style.borderColor =
+        "#ffffff";
+
+    bossHpBar.style.display =
+        "none";
+
+    document.getElementById("stat-name")
+        .innerText =
+        "PLAYER LV 1";
+
+    playerHpDisplay.innerText =
+        "0";
+
+    playerMaxHpDisplay.innerText =
+        "20";
+
+    soul.style.display =
+        "none";
+
+    actionMenu.style.display =
+        "none";
+
+    boss.style.left =
+        "220px";
+
+    boss.style.top =
+        "170px";
+
+    boss.style.transform =
+        "translateX(0)";
+
+    dialogue.innerText =
+        "* A lonely ghost flickers in the chamber.";
+
+    playGhostSound();
+
+    pacifistMoveCycle =
+        setInterval(() => {
+
             if (!isBattleActive) {
-                return;
-            }
-
-            if (chosenRoute === "genocide") {
-                dialogue.innerText =
-                    "* Your hands remain covered in static dust. MERCY is locked out.";
-            } else {
-                dialogue.innerText =
-                    "* You cannot attack the ghost on this route. Try interacting with it.";
-            }
-        }
-
-        function spawnDamageNumber(x, y, amount) {
-            const number = document.createElement("div");
-
-            number.className = "damage-number";
-            number.innerText = "-" + amount;
-
-            number.style.left =
-                parseFloat(x || 220) + 20 + "px";
-
-            number.style.top =
-                parseFloat(y || 20) + "px";
-
-            arena.appendChild(number);
-
-            setTimeout(function () {
-                if (number.parentNode) {
-                    number.remove();
-                }
-            }, 700);
-        }
-
-        // ============================================================
-        // PACIFIST ENGINE
-        // ============================================================
-
-        function setupPacifistChamber() {
-            document.body.style.backgroundColor = "#12121f";
-
-            arena.style.backgroundColor = "#161623";
-            arena.style.borderColor = "#ffffff";
-
-            bossHpBar.style.display = "none";
-
-            document.getElementById("stat-name").innerText =
-                "PLAYER LV 1";
-
-            playerHp = MAX_PLAYER_HP;
-
-            playerHpDisplay.innerText = pacifistClicks;
-            playerMaxHpDisplay.innerText = "20";
-
-            soul.style.display = "none";
-
-            actionMenu.style.display = "none";
-
-            boss.style.left = "220px";
-            boss.style.top = "170px";
-            boss.style.transform = "translateX(0)";
-
-            dialogue.innerText =
-                "* A lonely ghost flickers in the chamber.";
-
-            // Slowly move the ghost even if the player doesn't click.
-            pacifistMoveCycle = setInterval(function () {
-                if (!isBattleActive) {
-                    return;
-                }
-
-                moveGhostRandomly();
-            }, 1800);
-        }
-
-        function moveGhostRandomly() {
-            if (
-                !isBattleActive ||
-                chosenRoute !== "pacifist"
-            ) {
-                return;
-            }
-
-            const maxX = arena.clientWidth - 70;
-            const maxY = arena.clientHeight - 70;
-
-            const newX =
-                Math.floor(Math.random() * Math.max(1, maxX));
-
-            const newY =
-                Math.floor(Math.random() * Math.max(1, maxY));
-
-            boss.style.left = newX + "px";
-            boss.style.top = newY + "px";
-        }
-
-        boss.addEventListener("click", function (e) {
-            if (
-                !isBattleActive ||
-                chosenRoute !== "pacifist"
-            ) {
-                return;
-            }
-
-            pacifistClicks++;
-
-            // The counter represents successful interactions.
-            playerHpDisplay.innerText = pacifistClicks;
-
-            const currentTime = Date.now();
-
-            const timeDiff =
-                currentTime - lastClickTime;
-
-            lastClickTime = currentTime;
-
-            if (
-                lastClickTime !== 0 &&
-                timeDiff < 500
-            ) {
-                karmaPoints -= 1;
-
-                spawnParticle(
-                    e.offsetX,
-                    e.offsetY,
-                    "💔"
-                );
-
-                dialogue.innerText =
-                    "* The ghost recoils from your frantic energy.";
-            } else {
-                karmaPoints += 1;
-
-                spawnParticle(
-                    e.offsetX,
-                    e.offsetY,
-                    "💖"
-                );
-
-                dialogue.innerText =
-                    "* The ghost seems strangely comforted.";
-            }
-
-            if (pacifistClicks >= 20) {
-                endGameSequence(true);
                 return;
             }
 
             moveGhostRandomly();
-        });
 
-        // ============================================================
-        // PARTICLE EFFECT
-        // ============================================================
+        }, 1800);
+}
 
-        function spawnParticle(x, y, symbol) {
-            const particle = document.createElement("div");
+function moveGhostRandomly() {
 
-            particle.className = "heart-pop";
-            particle.innerText = symbol;
+    if (
+        !isBattleActive ||
+        chosenRoute !== "pacifist"
+    ) {
+        return;
+    }
 
-            particle.style.left = x + "px";
-            particle.style.top = y + "px";
+    const maxX =
+        arena.clientWidth - 70;
 
-            arena.appendChild(particle);
+    const maxY =
+        arena.clientHeight - 70;
 
-            setTimeout(function () {
-                if (particle.parentNode) {
-                    particle.remove();
-                }
-            }, 600);
-        }
-
-        // ============================================================
-        // MIRROR MODIFIER
-        // ============================================================
-
-        function startMirrorModifier() {
-            clearInterval(mirrorCycle);
-
-            mirrorCycle = setInterval(function () {
-                applyMirrorDistortion();
-            }, 900);
-        }
-
-        function applyMirrorDistortion() {
-            if (
-                chosenModifier !== "mirror" ||
-                !isBattleActive
-            ) {
-                return;
-            }
-
-            const currentRotation =
-                Math.random() * 20 - 10;
-
-            const scale =
-                1 + Math.random() * 0.05;
-
-            arena.style.transform =
-                "rotate(" +
-                currentRotation +
-                "deg) scale(" +
-                scale +
-                ")";
-
-            // Mirror mode also periodically flips the arena.
-            if (Math.random() < 0.25) {
-                arena.style.transform +=
-                    " scaleX(-1)";
-            }
-
-            setTimeout(function () {
-                if (isBattleActive) {
-                    arena.style.transform =
-                        "rotate(0deg) scale(1)";
-                }
-            }, 150);
-        }
-
-        // ============================================================
-        // MOUSE MOVEMENT
-        // ============================================================
-
-        arena.addEventListener("mousemove", function (e) {
-            if (
-                !isBattleActive ||
-                chosenRoute !== "genocide"
-            ) {
-                return;
-            }
-
-            const rect =
-                arena.getBoundingClientRect();
-
-            let newX =
-                e.clientX -
-                rect.left -
-                10;
-
-            let newY =
-                e.clientY -
-                rect.top -
-                10;
-
-            newX = Math.max(
-                0,
-                Math.min(
-                    arena.clientWidth - 20,
-                    newX
-                )
-            );
-
-            newY = Math.max(
-                0,
-                Math.min(
-                    arena.clientHeight - 20,
-                    newY
-                )
-            );
-
-            soulX = newX;
-            soulY = newY;
-
-            soul.style.left =
-                soulX + "px";
-
-            soul.style.top =
-                soulY + "px";
-        });
-
-        // ============================================================
-        // TOUCH SUPPORT
-        // ============================================================
-
-        arena.addEventListener(
-            "touchmove",
-            function (e) {
-                if (
-                    !isBattleActive ||
-                    chosenRoute !== "genocide"
-                ) {
-                    return;
-                }
-
-                e.preventDefault();
-
-                const touch =
-                    e.touches[0];
-
-                const rect =
-                    arena.getBoundingClientRect();
-
-                let newX =
-                    touch.clientX -
-                    rect.left -
-                    10;
-
-                let newY =
-                    touch.clientY -
-                    rect.top -
-                    10;
-
-                newX = Math.max(
-                    0,
-                    Math.min(
-                        arena.clientWidth - 20,
-                        newX
-                    )
-                );
-
-                newY = Math.max(
-                    0,
-                    Math.min(
-                        arena.clientHeight - 20,
-                        newY
-                    )
-                );
-
-                soulX = newX;
-                soulY = newY;
-
-                soul.style.left =
-                    soulX + "px";
-
-                soul.style.top =
-                    soulY + "px";
-            },
-            { passive: false }
+    const newX =
+        Math.floor(
+            Math.random() *
+            Math.max(1, maxX)
         );
 
-        // ============================================================
-        // END GAME
-        // ============================================================
+    const newY =
+        Math.floor(
+            Math.random() *
+            Math.max(1, maxY)
+        );
 
-        function endGameSequence(isVictory) {
-            if (gameEnding) {
-                return;
-            }
+    boss.style.left =
+        newX + "px";
 
-            gameEnding = true;
-            isBattleActive = false;
+    boss.style.top =
+        newY + "px";
+}
 
-            clearAllTimers();
+/* ============================================================
+   GHOST CLICK
+============================================================ */
 
-            bullets.forEach(function (bullet) {
-                if (
-                    bullet.element &&
-                    bullet.element.parentNode
-                ) {
-                    bullet.element.remove();
-                }
-            });
+boss.addEventListener(
+    "click",
+    function (event) {
 
-            bullets = [];
+        if (
+            !isBattleActive ||
+            chosenRoute !== "pacifist"
+        ) {
+            return;
+        }
+
+        pacifistClicks++;
+
+        playerHpDisplay.innerText =
+            pacifistClicks;
+
+        const currentTime =
+            Date.now();
+
+        const timeDiff =
+            currentTime -
+            lastClickTime;
+
+        const wasFirstClick =
+            lastClickTime === 0;
+
+        lastClickTime =
+            currentTime;
+
+        if (
+            !wasFirstClick &&
+            timeDiff < 500
+        ) {
+
+            karmaPoints--;
+
+            playHeartBreakSound();
+
+            spawnParticle(
+                event.offsetX,
+                event.offsetY,
+                "💔"
+            );
+
+            dialogue.innerText =
+                "* The ghost recoils from your frantic energy.";
+
+        } else {
+
+            karmaPoints++;
+
+            playPacifistSound();
+
+            spawnParticle(
+                event.offsetX,
+                event.offsetY,
+                "💖"
+            );
+
+            dialogue.innerText =
+                "* The ghost seems strangely comforted.";
+        }
+
+        if (pacifistClicks >= 20) {
+
+            endGameSequence(true);
+
+            return;
+        }
+
+        moveGhostRandomly();
+    }
+);
+
+/* ============================================================
+   PARTICLES
+============================================================ */
+
+function spawnParticle(
+    x,
+    y,
+    symbol
+) {
+
+    const particle =
+        document.createElement("div");
+
+    particle.className =
+        "heart-pop";
+
+    particle.innerText =
+        symbol;
+
+    particle.style.left =
+        x + "px";
+
+    particle.style.top =
+        y + "px";
+
+    arena.appendChild(particle);
+
+    setTimeout(() => {
+
+        if (particle.parentNode) {
+            particle.remove();
+        }
+
+    }, 600);
+}
+
+/* ============================================================
+   MIRROR MODE
+============================================================ */
+
+function startMirrorModifier() {
+
+    clearInterval(mirrorCycle);
+
+    mirrorCycle =
+        setInterval(() => {
+
+            applyMirrorDistortion();
+
+        }, 900);
+}
+
+function applyMirrorDistortion() {
+
+    if (
+        chosenModifier !== "mirror" ||
+        !isBattleActive
+    ) {
+        return;
+    }
+
+    const rotation =
+        Math.random() * 20 - 10;
+
+    const scale =
+        1 + Math.random() * 0.05;
+
+    arena.style.transform =
+        "rotate(" +
+        rotation +
+        "deg) scale(" +
+        scale +
+        ")";
+
+    if (Math.random() < 0.25) {
+
+        arena.style.transform +=
+            " scaleX(-1)";
+    }
+
+    playMirrorSound();
+
+    setTimeout(() => {
+
+        if (isBattleActive) {
 
             arena.style.transform =
                 "rotate(0deg) scale(1)";
-
-            setTimeout(function () {
-                arena.style.display = "none";
-
-                bossHpBar.style.display = "none";
-                playerStats.style.display = "none";
-                document.getElementById("ui-box").style.display =
-                    "none";
-
-                soul.style.display = "none";
-
-                menuScreen.style.display = "block";
-
-                if (chosenRoute === "genocide") {
-                    handleGenocideEnding(isVictory);
-                } else {
-                    handlePacifistEnding(isVictory);
-                }
-
-                startBtn.innerText =
-                    "RE-INITIALISE ENGINE";
-
-                gameEnding = false;
-            }, 1000);
         }
 
-        // ============================================================
-        // GENOCIDE ENDINGS
-        // ============================================================
+    }, 150);
+}
 
-        function handleGenocideEnding(isVictory) {
-            if (isVictory) {
-                document.body.style.backgroundColor =
-                    "#001a14";
+/* ============================================================
+   MOUSE CONTROL
+============================================================ */
 
-                menuTitle.innerText =
-                    "SYSTEM PURGED";
+arena.addEventListener(
+    "mousemove",
+    function (event) {
 
-                menuTitle.style.color =
-                    "#00ffcc";
-
-                menuScreen.style.borderColor =
-                    "#00ffcc";
-
-                menuScreen.style.boxShadow =
-                    "0 0 20px #00ffcc";
-
-                setMenuDescription(
-                    "The ghost dissolved into static code. You left nothing behind but dust and cold numbers."
-                );
-            } else {
-                document.body.style.backgroundColor =
-                    "#1a0000";
-
-                menuTitle.innerText =
-                    "GAME OVER";
-
-                menuTitle.style.color =
-                    "#ff0000";
-
-                menuScreen.style.borderColor =
-                    "#ff0000";
-
-                menuScreen.style.boxShadow =
-                    "0 0 20px #ff0000";
-
-                setMenuDescription(
-                    "Your determination shattered under the pressure of the localized timeline loop."
-                );
-            }
+        if (
+            !isBattleActive ||
+            chosenRoute !== "genocide"
+        ) {
+            return;
         }
 
-        // ============================================================
-        // PACIFIST ENDINGS
-        // ============================================================
+        const rect =
+            arena.getBoundingClientRect();
 
-        function handlePacifistEnding(isVictory) {
-            if (isVictory && karmaPoints >= 0) {
-                document.body.style.backgroundColor =
-                    "#1a3a2a";
+        let newX =
+            event.clientX -
+            rect.left -
+            10;
 
-                menuTitle.innerText =
-                    "TRUE PACIFIST";
+        let newY =
+            event.clientY -
+            rect.top -
+            10;
 
-                menuTitle.style.color =
-                    "#00ffcc";
+        newX = Math.max(
+            0,
+            Math.min(
+                arena.clientWidth - 20,
+                newX
+            )
+        );
 
-                menuScreen.style.borderColor =
-                    "#00ffcc";
+        newY = Math.max(
+            0,
+            Math.min(
+                arena.clientHeight - 20,
+                newY
+            )
+        );
 
-                menuScreen.style.boxShadow =
-                    "0 0 20px #00ffcc";
+        soulX = newX;
+        soulY = newY;
 
-                setMenuDescription(
-                    "🌸 You treated the entity with absolute patience and respect. You are bonded forever."
-                );
-            } else {
-                document.body.style.backgroundColor =
-                    "#3a0a0a";
+        soul.style.left =
+            soulX + "px";
 
-                menuTitle.innerText =
-                    "NEUTRAL CORRUPTION";
+        soul.style.top =
+            soulY + "px";
+    }
+);
 
-                menuTitle.style.color =
-                    "#ff0000";
+/* ============================================================
+   TOUCH CONTROL
+============================================================ */
 
-                menuScreen.style.borderColor =
-                    "#ff0000";
+arena.addEventListener(
+    "touchmove",
+    function (event) {
 
-                menuScreen.style.boxShadow =
-                    "0 0 20px #ff0000";
-
-                setMenuDescription(
-                    "💀 Your aggressive speed and clicking tore the soul apart."
-                );
-            }
+        if (
+            !isBattleActive ||
+            chosenRoute !== "genocide"
+        ) {
+            return;
         }
 
-        // ============================================================
-        // MENU DESCRIPTION
-        // ============================================================
+        event.preventDefault();
 
-        function setMenuDescription(text) {
-            let description =
-                document.getElementById("menu-description");
+        const touch =
+            event.touches[0];
 
-            if (!description) {
-                description =
-                    document.createElement("p");
+        const rect =
+            arena.getBoundingClientRect();
 
-                description.id =
-                    "menu-description";
+        let newX =
+            touch.clientX -
+            rect.left -
+            10;
 
-                description.style.color =
-                    "#888";
+        let newY =
+            touch.clientY -
+            rect.top -
+            10;
 
-                description.style.fontSize =
-                    "12px";
+        newX = Math.max(
+            0,
+            Math.min(
+                arena.clientWidth - 20,
+                newX
+            )
+        );
 
-                description.style.lineHeight =
-                    "1.5";
+        newY = Math.max(
+            0,
+            Math.min(
+                arena.clientHeight - 20,
+                newY
+            )
+        );
 
-                description.style.margin =
-                    "15px 0 0 0";
+        soulX = newX;
+        soulY = newY;
 
-                menuScreen.insertBefore(
-                    description,
-                    startBtn
-                );
-            }
+        soul.style.left =
+            soulX + "px";
 
-            description.innerText = text;
+        soul.style.top =
+            soulY + "px";
+    },
+    { passive: false }
+);
+
+/* ============================================================
+   KEYBOARD
+============================================================ */
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (
+            !isBattleActive ||
+            chosenRoute !== "genocide"
+        ) {
+            return;
         }
 
-        // ============================================================
-        // KEYBOARD SUPPORT
-        // ============================================================
+        const speed = 12;
 
-        document.addEventListener("keydown", function (e) {
-            if (
-                !isBattleActive ||
-                chosenRoute !== "genocide"
-            ) {
+        switch (
+            event.key.toLowerCase()
+        ) {
+
+            case "arrowup":
+            case "w":
+                soulY -= speed;
+                break;
+
+            case "arrowdown":
+            case "s":
+                soulY += speed;
+                break;
+
+            case "arrowleft":
+            case "a":
+                soulX -= speed;
+                break;
+
+            case "arrowright":
+            case "d":
+                soulX += speed;
+                break;
+
+            default:
                 return;
-            }
+        }
 
-            const moveSpeed = 12;
+        event.preventDefault();
 
-            switch (e.key.toLowerCase()) {
-                case "arrowup":
-                case "w":
-                    soulY -= moveSpeed;
-                    break;
+        soulX = Math.max(
+            0,
+            Math.min(
+                arena.clientWidth - 20,
+                soulX
+            )
+        );
 
-                case "arrowdown":
-                case "s":
-                    soulY += moveSpeed;
-                    break;
+        soulY = Math.max(
+            0,
+            Math.min(
+                arena.clientHeight - 20,
+                soulY
+            )
+        );
 
-                case "arrowleft":
-                case "a":
-                    soulX -= moveSpeed;
-                    break;
+        soul.style.left =
+            soulX + "px";
 
-                case "arrowright":
-                case "d":
-                    soulX += moveSpeed;
-                    break;
+        soul.style.top =
+            soulY + "px";
+    }
+);
 
-                default:
-                    return;
-            }
+/* ============================================================
+   END GAME
+============================================================ */
 
-            e.preventDefault();
+function endGameSequence(isVictory) {
 
-            soulX = Math.max(
-                0,
-                Math.min(
-                    arena.clientWidth - 20,
-                    soulX
-                )
+    if (gameEnding) {
+        return;
+    }
+
+    gameEnding = true;
+    isBattleActive = false;
+
+    clearAllTimers();
+
+    bullets.forEach(bullet => {
+
+        if (
+            bullet.element &&
+            bullet.element.parentNode
+        ) {
+            bullet.element.remove();
+        }
+
+    });
+
+    bullets = [];
+
+    arena.style.transform =
+        "rotate(0deg) scale(1)";
+
+    if (isVictory) {
+        playVictorySound();
+    } else {
+        playGameOverSound();
+    }
+
+    setTimeout(() => {
+
+        arena.style.display =
+            "none";
+
+        bossHpBar.style.display =
+            "none";
+
+        playerStats.style.display =
+            "none";
+
+        document.getElementById("ui-box")
+            .style.display =
+            "none";
+
+        soul.style.display =
+            "none";
+
+        menuScreen.style.display =
+            "block";
+
+        if (
+            chosenRoute ===
+            "genocide"
+        ) {
+
+            handleGenocideEnding(
+                isVictory
             );
 
-            soulY = Math.max(
-                0,
-                Math.min(
-                    arena.clientHeight - 20,
-                    soulY
-                )
+        } else {
+
+            handlePacifistEnding(
+                isVictory
             );
+        }
 
-            soul.style.left =
-                soulX + "px";
+        startBtn.innerText =
+            "RE-INITIALISE ENGINE";
 
-            soul.style.top =
-                soulY + "px";
-        });
+        gameEnding = false;
 
-        // ============================================================
-        // INITIAL STATE
-        // ============================================================
+    }, 1000);
+}
 
-        setRoute("pacifist");
-        setModifier("relaxed");
+/* ============================================================
+   GENOCIDE ENDING
+============================================================ */
 
-    </script>
+function handleGenocideEnding(
+    isVictory
+) {
+
+    if (isVictory) {
+
+        document.body.style.backgroundColor =
+            "#001a14";
+
+        menuTitle.innerText =
+            "SYSTEM PURGED";
+
+        menuTitle.style.color =
+            "#00ffcc";
+
+        menuScreen.style.borderColor =
+            "#00ffcc";
+
+        menuScreen.style.boxShadow =
+            "0 0 20px #00ffcc";
+
+        setMenuDescription(
+            "The ghost dissolved into static code. You left nothing behind but dust and cold numbers."
+        );
+
+    } else {
+
+        document.body.style.backgroundColor =
+            "#1a0000";
+
+        menuTitle.innerText =
+            "GAME OVER";
+
+        menuTitle.style.color =
+            "#ff0000";
+
+        menuScreen.style.borderColor =
+            "#ff0000";
+
+        menuScreen.style.boxShadow =
+            "0 0 20px #ff0000";
+
+        setMenuDescription(
+            "Your determination shattered under the pressure of the localized timeline loop."
+        );
+    }
+}
+
+/* ============================================================
+   PACIFIST ENDING
+============================================================ */
+
+function handlePacifistEnding(
+    isVictory
+) {
+
+    if (
+        isVictory &&
+        karmaPoints >= 0
+    ) {
+
+        document.body.style.backgroundColor =
+            "#1a3a2a";
+
+        menuTitle.innerText =
+            "TRUE PACIFIST";
+
+        menuTitle.style.color =
+            "#00ffcc";
+
+        menuScreen.style.borderColor =
+            "#00ffcc";
+
+        menuScreen.style.boxShadow =
+            "0 0 20px #00ffcc";
+
+        setMenuDescription(
+            "🌸 You treated the entity with absolute patience and respect. You are bonded forever."
+        );
+
+    } else {
+
+        document.body.style.backgroundColor =
+            "#3a0a0a";
+
+        menuTitle.innerText =
+            "NEUTRAL CORRUPTION";
+
+        menuTitle.style.color =
+            "#ff0000";
+
+        menuScreen.style.borderColor =
+            "#ff0000";
+
+        menuScreen.style.boxShadow =
+            "0 0 20px #ff0000";
+
+        setMenuDescription(
+            "💀 Your aggressive speed and clicking tore the soul apart."
+        );
+    }
+}
+
+/* ============================================================
+   MENU DESCRIPTION
+============================================================ */
+
+function setMenuDescription(text) {
+
+    let description =
+        document.getElementById(
+            "menu-description"
+        );
+
+    if (!description) {
+
+        description =
+            document.createElement("p");
+
+        description.id =
+            "menu-description";
+
+        description.style.color =
+            "#888";
+
+        description.style.fontSize =
+            "12px";
+
+        description.style.lineHeight =
+            "1.5";
+
+        description.style.margin =
+            "15px 0 0 0";
+
+        menuScreen.insertBefore(
+            description,
+            startBtn
+        );
+    }
+
+    description.innerText =
+        text;
+}
+
+/* ============================================================
+   INITIAL STATE
+============================================================ */
+
+setRoute("pacifist");
+setModifier("relaxed");
+
+</script>
 
 </body>
 </html>
