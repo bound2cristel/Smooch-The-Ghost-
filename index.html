@@ -1,13 +1,13 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smooch the Ghost!</title>
+    <title>Ghost Interaction Engine</title>
     <style>
-        /* This sets up the dark, retro game room aesthetic */
         body {
-            background-color: #1a1a2e;
+            background-color: #12121f;
             color: #ffffff;
             font-family: 'Courier New', Courier, monospace;
             display: flex;
@@ -18,9 +18,53 @@
             margin: 0;
             overflow: hidden;
             user-select: none;
+            transition: background-color 1s ease;
         }
 
-        /* This is the 400x400 box the ghost floats inside of */
+        #menu-screen {
+            border: 4px solid #ffffff;
+            background-color: #000000;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            width: 380px;
+        }
+
+        .toggle-btn {
+            background-color: #1c1c2e;
+            color: #aaaaaa;
+            border: 2px solid #555555;
+            padding: 10px 15px;
+            margin: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            width: 85%;
+            transition: 0.2s;
+        }
+
+        .toggle-btn.active {
+            background-color: #00ffcc;
+            color: #000000;
+            border-color: #ffffff;
+            font-weight: bold;
+            transform: scale(1.05);
+        }
+
+        #start-btn {
+            background-color: #ffffff;
+            color: #000000;
+            font-weight: bold;
+            border: 2px solid #ffffff;
+            font-size: 18px;
+            padding: 12px;
+            width: 85%;
+            cursor: pointer;
+            margin-top: 15px;
+            border-radius: 5px;
+        }
+
         #game-container {
             position: relative;
             width: 400px;
@@ -28,13 +72,14 @@
             border: 4px solid #ffffff;
             background-color: #161623;
             border-radius: 10px;
+            display: none;
+            transition: all 0.4s ease;
         }
 
-        /* This styles the ghost emoji and makes its movement smooth */
         #ghost {
             position: absolute;
             font-size: 50px;
-            transition: all 0.4s ease; /* Makes the ghost slide smoothly instead of teleporting */
+            transition: all 0.3s ease;
             width: 50px;
             height: 50px;
             text-align: center;
@@ -42,21 +87,23 @@
             cursor: pointer;
         }
 
-        /* This styles the UI layout below the game box */
         #ui-box {
             margin-top: 20px;
             text-align: center;
             width: 400px;
+            display: none;
         }
 
         #score-board {
-            font-size: 24px;
+            font-size: 22px;
             color: #ff4d6d;
             font-weight: bold;
             margin-bottom: 10px;
+            display: none;
+            width: 400px;
+            justify-content: space-between;
         }
 
-        /* This is the Undertale-style black dialogue box */
         #dialogue {
             border: 2px solid #ffffff;
             padding: 10px;
@@ -64,12 +111,11 @@
             background-color: #000000;
             border-radius: 5px;
             font-size: 14px;
+            transition: all 0.5s ease;
         }
 
-        /* This creates the floating heart animation effect when clicked */
         .heart-pop {
             position: absolute;
-            color: #ff4d6d;
             font-size: 24px;
             animation: floatUp 0.6s ease-out forwards;
             pointer-events: none;
@@ -77,130 +123,184 @@
 
         @keyframes floatUp {
             0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
+            100% { transform: translateY(-70px) scale(1.8); opacity: 0; }
         }
     </style>
 </head>
 <body>
 
-    <!-- This shows your score on the screen -->
-    <div id="score-board">💝 Love Points: <span id="score">0</span></div>
+    <!-- CLEAN SELECTION MENU -->
+    <div id="menu-screen">
+        <h2 style="color: #ffffff; margin-top: 0; letter-spacing: 2px;">GHOST REPOSITORY</h2>
+        <p style="margin-bottom: 20px; color: #888;">Select an anomaly container execution rate:</p>
+        <button id="speed-relaxed" class="toggle-btn active" onclick="setSpeed('relaxed')">🧘 Relaxed Chamber</button>
+        <button id="speed-timer" class="toggle-btn" onclick="setSpeed('timer')">⏱️ 30-Second Countdown</button>
+        <button id="speed-mirror" class="toggle-btn" onclick="setSpeed('mirror')">🌀 Kinetic Mirror</button>
+        <button id="start-btn" onclick="launchGame()">INITIALISE MATRIX</button>
+    </div>
+
+    <!-- MAIN INTERACTIVE SPACE -->
+    <div id="score-board">
+        <div>💝 Clicks: <span id="score">0</span></div>
+        <div id="timer-display" style="color: #00ffcc; display: none;">⏳ Time: 30s</div>
+    </div>
     
-    <!-- This is the play area -->
     <div id="game-container">
         <div id="ghost">👻</div>
     </div>
 
-    <!-- This is the text box where the ghost speaks to you -->
     <div id="ui-box">
-        <div id="dialogue">Click the ghost to give them a little smooch...</div>
+        <div id="dialogue">Calibrating personality matrices...</div>
     </div>
 
     <script>
-        // STEP 1: Grab all the HTML elements so JavaScript can manipulate them
         const ghost = document.getElementById('ghost');
         const container = document.getElementById('game-container');
         const scoreDisplay = document.getElementById('score');
         const dialogue = document.getElementById('dialogue');
+        const menuScreen = document.getElementById('menu-screen');
+        const timerDisplay = document.getElementById('timer-display');
+        const scoreBoard = document.getElementById('score-board');
+        const uiBox = document.getElementById('ui-box');
 
-        // STEP 2: Variables to track standard score and boss properties
+        let chosenSpeed = 'relaxed';
         let score = 0;
-        let isBossFight = false;
-        let bossInterval; // This will hold the automated timer loop
-        let bossHP = 10;
+        let gameActive = false;
+        let speedTimer;
+        let timeLeft = 30;
 
-        // STEP 3: The math function that moves the ghost to a random spot
+        // SECRET SELECTION METRICS
+        let karmaPoints = 0;
+        let lastClickTime = 0;
+
+        function setSpeed(speed) {
+            chosenSpeed = speed;
+            document.getElementById('speed-relaxed').classList.remove('active');
+            document.getElementById('speed-timer').classList.remove('active');
+            document.getElementById('speed-mirror').classList.remove('active');
+            document.getElementById('speed-' + speed).classList.add('active');
+        }
+
+        function launchGame() {
+            menuScreen.style.display = 'none';
+            container.style.display = 'block';
+            scoreBoard.style.display = 'flex';
+            uiBox.style.display = 'block';
+            gameActive = true;
+            lastClickTime = Date.now();
+
+            dialogue.innerText = "A quiet ghost appears. What are your intentions?";
+
+            if (chosenSpeed === 'timer') {
+                timerDisplay.style.display = 'block';
+                startCountdownLoop();
+            }
+
+            moveGhost();
+        }
+
         function moveGhost() {
+            if (!gameActive) return;
             const maxX = container.clientWidth - ghost.clientWidth;
             const maxY = container.clientHeight - ghost.clientHeight;
-            
-            const randomX = Math.floor(Math.random() * maxX);
-            const randomY = Math.floor(Math.random() * maxY);
-            
-            ghost.style.left = randomX + 'px';
-            ghost.style.top = randomY + 'px';
+            ghost.style.left = Math.floor(Math.random() * maxX) + 'px';
+            ghost.style.top = Math.floor(Math.random() * maxY) + 'px';
         }
 
-        // STEP 4: A function that creates a floating heart right where you clicked
-        function spawnHeart(x, y) {
-            const heart = document.createElement('div');
-            heart.classList.add('heart-pop');
-            // If it's a boss fight, spawn broken hearts instead!
-            heart.innerText = isBossFight ? '💔' : '💖';
-            heart.style.left = x + 'px';
-            heart.style.top = y + 'px';
-            container.appendChild(heart);
-
-            setTimeout(() => {
-                heart.remove();
-            }, 600);
+        function spawnParticle(x, y, symbol) {
+            const part = document.createElement('div');
+            part.classList.add('heart-pop');
+            part.innerText = symbol;
+            part.style.left = x + 'px';
+            part.style.top = y + 'px';
+            container.appendChild(part);
+            setTimeout(() => { part.remove(); }, 600);
         }
 
-        // STEP 5: This function triggers the chaotic boss fight phase
-        function startBossFight() {
-            isBossFight = true;
-            ghost.innerText = '👻💢'; // Make the ghost look mad
-            container.style.borderColor = '#ff4d6d'; // Turn the box border pink/red
-            dialogue.style.color = '#ff4d6d';
-            dialogue.innerText = "WAIT A MINUTE! That's too much affection! PREPARE TO BATTLE!!!";
-
-            // BOSS MECHANIC: Move the ghost automatically every 500 milliseconds (0.5 seconds)
-            bossInterval = setInterval(() => {
-                moveGhost();
-            }, 500);
+        function startCountdownLoop() {
+            speedTimer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = `⏳ Time: ${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(speedTimer);
+                    evaluateFinalEnding();
+                }
+            }, 1000);
         }
 
-        // STEP 6: Tell the computer to wait and listen for a click on the ghost
+        function evaluateFinalEnding() {
+            gameActive = false;
+            clearInterval(speedTimer);
+            ghost.style.display = 'none';
+            container.style.transform = 'rotate(0deg)';
+
+            if (karmaPoints >= 0) {
+                document.body.style.backgroundColor = '#1a3a2a';
+                container.style.borderColor = '#00ffcc';
+                dialogue.style.color = '#00ffcc';
+                dialogue.innerText = "🌸 TRUE PACIFIST: You treated the entity with absolute patience and respect. You are bonded forever.";
+            } else {
+                document.body.style.backgroundColor = '#3a0a0a';
+                container.style.borderColor = '#ff0000';
+                dialogue.style.color = '#ff0000';
+                dialogue.innerText = "💀 CORRUPTED GENOCIDE: Your aggressive speed tore the software grid apart. The ghost fled in terror.";
+            }
+        }
+
         ghost.addEventListener('click', (e) => {
-            // Calculate exactly where your mouse clicked inside the game box
+            if (!gameActive) return;
+
+            score++;
+            scoreDisplay.innerText = score;
+
             const rect = container.getBoundingClientRect();
             const x = e.clientX - rect.left - 12;
             const y = e.clientY - rect.top - 25;
-            spawnHeart(x, y);
 
-            // PHASE 1: Normal Clicker Mode
-            if (!isBossFight) {
-                score++;
-                scoreDisplay.innerText = score;
-                moveGhost();
+            const currentTime = Date.now();
+            const timeGap = currentTime - lastClickTime;
+            lastClickTime = currentTime;
 
-                // Using your awesome custom text milestones!
-                if (score === 1) {
-                    dialogue.innerText = "What are you doing?";
-                } else if (score === 5) {
-                    dialogue.innerText = "Haha, that tickles!";
-                } else if (score === 10) {
-                    dialogue.innerText = "Haha!";
-                } else if (score === 20) {
-                    dialogue.innerText = "best friends ?";
-                } else if (score === 35) {
-                    dialogue.innerText = "My heart is melting!";
-                } else if (score === 50) {
-                    // Trigger the boss fight at 50!
-                    startBossFight();
-                }
-            } 
-            // PHASE 2: Boss Fight Mode!
-            else {
-                bossHP--;
-                dialogue.innerText = `Ouch! Stop! Boss HP remaining: ${bossHP}`;
-                moveGhost(); // Extra movement shift when clicked to dodge your mouse
-
-                // Check for victory
-                if (bossHP <= 0) {
-                    clearInterval(bossInterval); // Stop the automated movement loop
-                    ghost.innerText = '👑👻'; // Give the ghost a crown
-                    ghost.style.left = '175px'; // Center the ghost perfectly
-                    ghost.style.top = '175px';
-                    container.style.borderColor = '#ffd700'; // Gold border
-                    dialogue.style.color = '#00ffcc';
-                    dialogue.innerText = "YOU WIN! The ghost accepted your overwhelming love. You are officially best friends forever!";
-                }
+            if (timeGap < 650) {
+                karmaPoints--;
+            } else {
+                karmaPoints++;
             }
-        });
 
-        // Run this function once right at the start
-        moveGhost();
+            let particle = '💖';
+            if (karmaPoints < -5) {
+                ghost.innerText = '😈';
+                container.style.borderColor = '#ff0000';
+                dialogue.style.color = '#ff0000';
+                particle = '💥';
+            } else if (karmaPoints > 5) {
+                ghost.innerText = '🌸👻🌸';
+                container.style.borderColor = '#00ffcc';
+                dialogue.style.color = '#00ffcc';
+                particle = '🌸';
+            } else {
+                ghost.innerText = '👻';
+                container.style.borderColor = '#ffffff';
+                dialogue.style.color = '#ffffff';
+            }
+
+            if (score === 5) {
+                dialogue.innerText = (karmaPoints >= 0) ? "What are you doing?" : "Hey! Stop clicking so fast!";
+            } else if (score === 15) {
+                dialogue.innerText = (karmaPoints >= 0) ? "best friends ?" : "You're starting to hurt me...";
+            } else if (score === 30) {
+                evaluateFinalEnding();
+                return;
+            }
+
+            spawnParticle(x, y, particle);
+            moveGhost();
+
+            if (chosenSpeed === 'mirror') {
+                const rot = [90, 180, 270, -90][Math.floor(Math.random() * 4)];
+                container.style.transform = `rotate(${rot}deg)`;
+            }
+        }); // <-- THIS tag closes the click event!
     </script>
 </body>
 </html>
