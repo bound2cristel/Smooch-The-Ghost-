@@ -209,21 +209,28 @@
    <!-- SELECTION MENU -->
 <div id="menu-screen">
     <h2 id="menu-title" style="color: #ffffff; margin-top: 0; letter-spacing: 2px;">GHOST REPOSITORY</h2>
-    <p id="menu-text" style="margin-bottom: 20px; color: #888;">Select an anomaly container execution rate:</p>
+    
+    <p style="margin: 10px 0 5px 0; color: #888; font-size: 13px;">CORE PROTOCOL:</p>
     <button id="route-pacifist" class="toggle-btn active" onclick="setRoute('pacifist')">🌸 Pacifist Path</button>
     <button id="route-genocide" class="toggle-btn" onclick="setRoute('genocide')">💀 Hardcore Genocide</button>
     
-    <p style="color: #666666; font-size: 11px; margin-top: 15px; font-style: italic;">credits to fucking max for the fucking idea of the battle i fucking guess</p>
+    <p style="margin: 15px 0 5px 0; color: #888; font-size: 13px;">CHAMBER MODIFIER:</p>
+    <button id="mod-relaxed" class="toggle-btn active" onclick="setModifier('relaxed')">🌀 Relaxed Chamber</button>
+    <button id="mod-timer" class="toggle-btn" onclick="setModifier('timer')">⏱️ 30s Countdown</button>
+    <button id="mod-mirror" class="toggle-btn" onclick="setModifier('mirror')">🪞 Kinetic Mirror</button>
     
+    <p style="color: #666666; font-size: 11px; margin-top: 15px; font-style: italic;">credits to fucking max for the fucking idea of the battle i fucking guess</p>
     <button id="start-btn" onclick="launchGame()">INITIALISE MATRIX</button>
 </div>
-    <!-- STATS AND HEALTH HUD -->
-    <div id="boss-hp-bar"><div id="boss-hp-fill"></div></div>
-    <div id="player-stats">
-        <div id="stat-name" style="color: #ffffff;">PLAYER LV 1</div>
-        <div id="stat-hp-box" style="color: #ff4d6d;">HP: <span id="player-hp">99</span> / 99</div>
+
+<!-- STATS AND HEALTH HUD -->
+  <div id="boss-hp-bar"><div id="boss-hp-fill"></div></div>
+    <div id="player-stats"> 
+        <div id="stat-name" style="color: #ffffff;">PLAYER LV 1</div> 
+        <div id="stat-hp-box" style="color: #ff4d6d;">HP: <span id="player-hp">99</span> / 99</div> 
     </div>
 
+    <!-- PASTE THE NEW BLOCK DIRECTLY BELOW THIS LINE -->
     <!-- MAIN INTERACTIVE BOX -->
     <div id="battle-arena">
         <div id="ghost-boss" style="left: 220px; top: 170px;">👻</div>
@@ -238,6 +245,38 @@
             <button class="menu-btn" onclick="attemptMercy()">❌ MERCY</button>
         </div>
     </div>
+
+    <script>
+        const arena = document.getElementById('battle-arena');
+        const soul = document.getElementById('player-soul');
+        const boss = document.getElementById('ghost-boss');
+        const dialogue = document.getElementById('dialogue');
+        const bossHpFill = document.getElementById('boss-hp-fill');
+        const playerHpDisplay = document.getElementById('player-hp');
+        const menuScreen = document.getElementById('menu-screen');
+        const menuTitle = document.getElementById('menu-title');
+        const menuText = document.getElementById('menu-text');
+        const startBtn = document.getElementById('start-btn');
+        const actionMenu = document.getElementById('action-menu');
+
+        let chosenRoute = 'pacifist';
+        let chosenModifier = 'relaxed'; 
+        let timeLeft = 30;              
+        let countdownInterval;          
+        let bossHp = 600;
+        let playerHp = 99;
+        let isBattleActive = false;
+        let attackCycle;
+        let bullets = [];
+        let soulX = 240;
+        let soulY = 320;
+
+        let isPlayerTurn = true; 
+        let turnTimer;
+
+        let pacifistClicks = 0;
+        let karmaPoints = 0;
+        let lastClickTime = 0;
 
     <script>
         const arena = document.getElementById('battle-arena');
